@@ -1,0 +1,489 @@
+// ======================================================================
+
+
+
+
+// ======================================================================================
+[
+  {
+
+    "title": "Lagaan",
+    "description": "The people of a small village in Victorian India stake their future on a game of cricket against their ruthless British rulers.",
+    "Released": "2001-06-15T00:00:00Z",
+    "Year": 2001,
+    "Poster": "https://example.com/posters/lagaan.jpg",
+    "Actors": ["Aamir Khan", "Gracy Singh", "Rachel Shelley"],
+    "Director": ["Ashutosh Gowariker"],
+    "durationMins": 224,
+    "language": "Hindi",
+    "releaseDate": "2001-06-15T00:00:00Z",
+    "country": "India",
+    "genre": ["Drama", "Sport"],
+    "rating": 8.1
+  },
+  {
+
+    "title": "PK",
+    "description": "An alien on Earth loses the only device he can use to communicate with his spaceship.",
+    "Released": "2014-12-19T00:00:00Z",
+    "Year": 2014,
+    "Poster": "https://example.com/posters/pk.jpg",
+    "Actors": ["Aamir Khan", "Anushka Sharma", "Sanjay Dutt"],
+    "Director": ["Rajkumar Hirani"],
+    "durationMins": 153,
+    "language": "Hindi",
+    "releaseDate": "2014-12-19T00:00:00Z",
+    "country": "India",
+    "genre": ["Comedy", "Drama", "Sci-Fi"],
+    "rating": 8.1
+  },
+  {
+
+    "title": "Bahubali: The Beginning",
+    "description": "In ancient India, an adventurous and daring man becomes involved in a decades-old feud between two warring peoples.",
+    "Released": "2015-07-10T00:00:00Z",
+    "Year": 2015,
+    "Poster": "https://example.com/posters/bahubali1.jpg",
+    "Actors": ["Prabhas", "Rana Daggubati", "Anushka Shetty"],
+    "Director": ["S.S. Rajamouli"],
+    "durationMins": 159,
+    "language": "Telugu",
+    "releaseDate": "2015-07-10T00:00:00Z",
+    "country": "India",
+    "genre": ["Action", "Drama"],
+    "rating": 8.0
+  },
+  {
+
+    "title": "Bahubali 2: The Conclusion",
+    "description": "When Shiva, the son of Bahubali, learns about his heritage, he begins to look for answers.",
+    "Released": "2017-04-28T00:00:00Z",
+    "Year": 2017,
+    "Poster": "https://example.com/posters/bahubali2.jpg",
+    "Actors": ["Prabhas", "Rana Daggubati", "Anushka Shetty"],
+    "Director": ["S.S. Rajamouli"],
+    "durationMins": 167,
+    "language": "Telugu",
+    "releaseDate": "2017-04-28T00:00:00Z",
+    "country": "India",
+    "genre": ["Action", "Drama"],
+    "rating": 8.2
+  },
+  {
+
+    "title": "Padmaavat",
+    "description": "Queen Padmavati is married to a noble king and they live in a prosperous fortress with their subjects until an ambitious Sultan hears of Padmavati's beauty and forms an obsessive love for the Queen of Mewar.",
+    "Released": "2018-01-25T00:00:00Z",
+    "Year": 2018,
+    "Poster": "https://example.com/posters/padmaavat.jpg",
+    "Actors": ["Deepika Padukone", "Shahid Kapoor", "Ranveer Singh"],
+    "Director": ["Sanjay Leela Bhansali"],
+    "durationMins": 164,
+    "language": "Hindi",
+    "releaseDate": "2018-01-25T00:00:00Z",
+    "country": "India",
+    "genre": ["Drama", "History"],
+    "rating": 7.0
+  },
+  {
+
+    "title": "Kabir Singh",
+    "description": "A short-tempered house surgeon gets into a relationship with his junior, but his anger and his girlfriend's father force them apart.",
+    "Released": "2019-06-21T00:00:00Z",
+    "Year": 2019,
+    "Poster": "https://example.com/posters/kabirsingh.jpg",
+    "Actors": ["Shahid Kapoor", "Kiara Advani"],
+    "Director": ["Sandeep Reddy Vanga"],
+    "durationMins": 173,
+    "language": "Hindi",
+    "releaseDate": "2019-06-21T00:00:00Z",
+    "country": "India",
+    "genre": ["Drama", "Romance"],
+    "rating": 7.1
+  },
+  {
+
+    "title": "Uri: The Surgical Strike",
+    "description": "Indian army special forces execute a covert operation against a group of militants who attacked a base in Uri, Kashmir, in 2016.",
+    "Released": "2019-01-11T00:00:00Z",
+    "Year": 2019,
+    "Poster": "https://example.com/posters/uri.jpg",
+    "Actors": ["Vicky Kaushal", "Paresh Rawal", "Mohit Raina"],
+    "Director": ["Aditya Dhar"],
+    "durationMins": 138,
+    "language": "Hindi",
+    "releaseDate": "2019-01-11T00:00:00Z",
+    "country": "India",
+    "genre": ["Action", "Drama", "War"],
+    "rating": 8.2
+  },
+  {
+
+    "title": "Gully Boy",
+    "description": "A coming-of-age story based on the lives of street rappers in Mumbai.",
+    "Released": "2019-02-14T00:00:00Z",
+    "Year": 2019,
+    "Poster": "https://example.com/posters/gullyboy.jpg",
+    "Actors": ["Ranveer Singh", "Alia Bhatt", "Siddhant Chaturvedi"],
+    "Director": ["Zoya Akhtar"],
+    "durationMins": 154,
+    "language": "Hindi",
+    "releaseDate": "2019-02-14T00:00:00Z",
+    "country": "India",
+    "genre": ["Drama", "Music"],
+    "rating": 8.1
+  },
+  {
+
+    "title": "Andhadhun",
+    "description": "A series of mysterious events changes the life of a blind pianist, who must now report a crime that he should technically know nothing of.",
+    "Released": "2018-10-05T00:00:00Z",
+    "Year": 2018,
+    "Poster": "https://example.com/posters/andhadhun.jpg",
+    "Actors": ["Ayushmann Khurrana", "Tabu", "Radhika Apte"],
+    "Director": ["Sriram Raghavan"],
+    "durationMins": 139,
+    "language": "Hindi",
+    "releaseDate": "2018-10-05T00:00:00Z",
+    "country": "India",
+    "genre": ["Crime", "Thriller"],
+    "rating": 8.3
+  },
+  {
+
+    "title": "Article 15",
+    "description": "In a small village, a new police officer investigates the disappearance of three girls.",
+    "Released": "2019-06-28T00:00:00Z",
+    "Year": 2019,
+    "Poster": "https://example.com/posters/article15.jpg",
+    "Actors": ["Ayushmann Khurrana", "Nassar", "Manoj Pahwa"],
+    "Director": ["Anubhav Sinha"],
+    "durationMins": 130,
+    "language": "Hindi",
+    "releaseDate": "2019-06-28T00:00:00Z",
+    "country": "India",
+    "genre": ["Crime", "Drama"],
+    "rating": 8.2
+  },
+  {
+
+    "title": "Kesari",
+    "description": "Based on the Battle of Saragarhi, where 21 Sikh soldiers fought against 10,000 Afghans in 1897.",
+    "Released": "2019-03-21T00:00:00Z",
+    "Year": 2019,
+    "Poster": "https://example.com/posters/kesari.jpg",
+    "Actors": ["Akshay Kumar", "Parineeti Chopra"],
+    "Director": ["Anurag Singh"],
+    "durationMins": 150,
+    "language": "Hindi",
+    "releaseDate": "2019-03-21T00:00:00Z",
+    "country": "India",
+    "genre": ["Action", "Drama", "History"],
+    "rating": 7.5
+  },
+  {
+
+    "title": "Super 30",
+    "description": "Based on the life of Anand Kumar, a mathematician who coaches underprivileged students for the IIT entrance exam.",
+    "Released": "2019-07-12T00:00:00Z",
+    "Year": 2019,
+    "Poster": "https://example.com/posters/super30.jpg",
+    "Actors": ["Hrithik Roshan", "Mrunal Thakur"],
+    "Director": ["Vikas Bahl"],
+    "durationMins": 154,
+    "language": "Hindi",
+    "releaseDate": "2019-07-12T00:00:00Z",
+    "country": "India",
+    "genre": ["Biography", "Drama"],
+    "rating": 8.0
+  },
+  {
+
+    "title": "Mission Mangal",
+    "description": "Based on the true story of the scientists at ISRO who contributed to the Mars Orbiter Mission.",
+    "Released": "2019-08-15T00:00:00Z",
+    "Year": 2019,
+    "Poster": "https://example.com/posters/missionmangal.jpg",
+    "Actors": ["Akshay Kumar", "Vidya Balan", "Taapsee Pannu"],
+    "Director": ["Jagan Shakti"],
+    "durationMins": 133,
+    "language": "Hindi",
+    "releaseDate": "2019-08-15T00:00:00Z",
+    "country": "India",
+    "genre": ["Drama", "History"],
+    "rating": 7.8
+  },
+  {
+
+    "title": "Chhichhore",
+    "description": "A tragic incident forces Anirudh, a middle-aged man, to take a trip down memory lane and reminisce his college days along with his friends, who were labelled as losers.",
+    "Released": "2019-09-06T00:00:00Z",
+    "Year": 2019,
+    "Poster": "https://example.com/posters/chhichhore.jpg",
+    "Actors": ["Sushant Singh Rajput", "Shraddha Kapoor"],
+    "Director": ["Nitesh Tiwari"],
+    "durationMins": 143,
+    "language": "Hindi",
+    "releaseDate": "2019-09-06T00:00:00Z",
+    "country": "India",
+    "genre": ["Comedy", "Drama"],
+    "rating": 8.2
+  },
+  {
+
+    "title": "War",
+    "description": "An Indian soldier is assigned to eliminate his former mentor and he must keep his wits about him if he is to be successful in his mission.",
+    "Released": "2019-10-02T00:00:00Z",
+    "Year": 2019,
+    "Poster": "https://example.com/posters/war.jpg",
+    "Actors": ["Hrithik Roshan", "Tiger Shroff", "Vaani Kapoor"],
+    "Director": ["Siddharth Anand"],
+    "durationMins": 154,
+    "language": "Hindi",
+    "releaseDate": "2019-10-02T00:00:00Z",
+    "country": "India",
+    "genre": ["Action", "Thriller"],
+    "rating": 7.5
+  },
+  {
+
+    "title": "Tanhaji: The Unsung Warrior",
+    "description": "Set in the 17th century, the film recounts the bravery of Tanaji Malusare, a military leader in the army of Chhatrapati Shivaji Maharaj.",
+    "Released": "2020-01-10T00:00:00Z",
+    "Year": 2020,
+    "Poster": "https://example.com/posters/tanhaji.jpg",
+    "Actors": ["Ajay Devgn", "Saif Ali Khan", "Kajol"],
+    "Director": ["Om Raut"],
+    "durationMins": 140,
+    "language": "Hindi",
+    "releaseDate": "2020-01-10T00:00:00Z",
+    "country": "India",
+    "genre": ["Action", "Drama", "History"],
+    "rating": 7.6
+  },
+  {
+
+    "title": "Thappad",
+    "description": "A woman's life unravels after her husband slaps her at a party.",
+    "Released": "2020-02-28T00:00:00Z",
+    "Year": 2020,
+    "Poster": "https://example.com/posters/thappad.jpg",
+    "Actors": ["Taapsee Pannu", "Pavail Gulati"],
+    "Director": ["Anubhav Sinha"],
+    "durationMins": 141,
+    "language": "Hindi",
+    "releaseDate": "2020-02-28T00:00:00Z",
+    "country": "India",
+    "genre": ["Drama"],
+    "rating": 8.1
+  },
+  {
+
+    "title": "Shubh Mangal Zyada Saavdhan",
+    "description": "Two men in love with each other try to convince their conservative families to accept their relationship.",
+    "Released": "2020-02-21T00:00:00Z",
+    "Year": 2020,
+    "Poster": "https://example.com/posters/shubhmangal.jpg",
+    "Actors": ["Ayushmann Khurrana", "Jitendra Kumar"],
+    "Director": ["Hitesh Kewalya"],
+    "durationMins": 120,
+    "language": "Hindi",
+    "releaseDate": "2020-02-21T00:00:00Z",
+    "country": "India",
+    "genre": ["Comedy", "Drama", "Romance"],
+    "rating": 7.0
+  },
+  {
+
+    "title": "Baaghi 3",
+    "description": "A man sets out on a journey to save his elder brother, who gets kidnapped in Syria.",
+    "Released": "2020-03-06T00:00:00Z",
+    "Year": 2020,
+    "Poster": "https://example.com/posters/baaghi3.jpg",
+    "Actors": ["Tiger Shroff", "Shraddha Kapoor", "Riteish Deshmukh"],
+    "Director": ["Ahmed Khan"],
+    "durationMins": 143,
+    "language": "Hindi",
+    "releaseDate": "2020-03-06T00:00:00Z",
+    "country": "India",
+    "genre": ["Action", "Drama"],
+    "rating": 5.6
+  },
+  {
+
+    "title": "Panga",
+    "description": "A former kabaddi champion decides to return to the sport after having a child.",
+    "Released": "2020-01-24T00:00:00Z",
+    "Year": 2020,
+    "Poster": "https://example.com/posters/panga.jpg",
+    "Actors": ["Kangana Ranaut", "Jassie Gill", "Richa Chadha"],
+    "Director": ["Ashwiny Iyer Tiwari"],
+    "durationMins": 132,
+    "language": "Hindi",
+    "releaseDate": "2020-01-24T00:00:00Z",
+    "country": "India",
+    "genre": ["Drama", "Sport"],
+    "rating": 7.6
+  },
+  {
+
+    "title": "Ludo",
+    "description": "Four different stories are connected by a single incident.",
+    "Released": "2020-11-12T00:00:00Z",
+    "Year": 2020,
+    "Poster": "https://example.com/posters/ludo.jpg",
+    "Actors": ["Abhishek Bachchan", "Rajkummar Rao", "Aditya Roy Kapur"],
+    "Director": ["Anurag Basu"],
+    "durationMins": 150,
+    "language": "Hindi",
+    "releaseDate": "2020-11-12T00:00:00Z",
+    "country": "India",
+    "genre": ["Comedy", "Crime", "Drama"],
+    "rating": 7.6
+  },
+  {
+
+    "title": "Coolie No. 1",
+    "description": "A porter pretends to be a rich man to win the heart of a woman.",
+    "Released": "2020-12-25T00:00:00Z",
+    "Year": 2020,
+    "Poster": "https://example.com/posters/coolieno1.jpg",
+    "Actors": ["Varun Dhawan", "Sara Ali Khan"],
+    "Director": ["David Dhawan"],
+    "durationMins": 120,
+    "language": "Hindi",
+    "releaseDate": "2020-12-25T00:00:00Z",
+    "country": "India",
+    "genre": ["Comedy", "Romance"],
+    "rating": 3.9
+  },
+  {
+
+    "title": "Laxmii",
+    "description": "A man gets possessed by the ghost of a transgender woman.",
+    "Released": "2020-11-09T00:00:00Z",
+    "Year": 2020,
+    "Poster": "https://example.com/posters/laxmii.jpg",
+    "Actors": ["Akshay Kumar", "Kiara Advani"],
+    "Director": ["Raghava Lawrence"],
+    "durationMins": 143,
+    "language": "Hindi",
+    "releaseDate": "2020-11-09T00:00:00Z",
+    "country": "India",
+    "genre": ["Horror", "Comedy"],
+    "rating": 4.5
+  },
+  {
+
+    "title": "Shershaah",
+    "description": "The life of Captain Vikram Batra, who was martyred in the Kargil War.",
+    "Released": "2021-08-12T00:00:00Z",
+    "Year": 2021,
+    "Poster": "https://example.com/posters/shershaah.jpg",
+    "Actors": ["Sidharth Malhotra", "Kiara Advani"],
+    "Director": ["Vishnuvardhan"],
+    "durationMins": 135,
+    "language": "Hindi",
+    "releaseDate": "2021-08-12T00:00:00Z",
+    "country": "India",
+    "genre": ["Biography", "Drama", "War"],
+    "rating": 8.4
+  },
+  {
+
+    "title": "Sardar Udham",
+    "description": "The story of Udham Singh, who avenged the Jallianwala Bagh massacre.",
+    "Released": "2021-10-16T00:00:00Z",
+    "Year": 2021,
+    "Poster": "https://example.com/posters/sardarudham.jpg",
+    "Actors": ["Vicky Kaushal"],
+    "Director": ["Shoojit Sircar"],
+    "durationMins": 164,
+    "language": "Hindi",
+    "releaseDate": "2021-10-16T00:00:00Z",
+    "country": "India",
+    "genre": ["Biography", "Drama", "History"],
+    "rating": 8.5
+  },
+  {
+
+    "title": "Sooryavanshi",
+    "description": "An anti-terrorism squad leader takes on a mission to prevent a major attack in Mumbai.",
+    "Released": "2021-11-05T00:00:00Z",
+    "Year": 2021,
+    "Poster": "https://example.com/posters/sooryavanshi.jpg",
+    "Actors": ["Akshay Kumar", "Katrina Kaif"],
+    "Director": ["Rohit Shetty"],
+    "durationMins": 145,
+    "language": "Hindi",
+    "releaseDate": "2021-11-05T00:00:00Z",
+    "country": "India",
+    "genre": ["Action", "Drama"],
+    "rating": 5.6
+  },
+  {
+
+    "title": "83",
+    "description": "The story of the Indian cricket team's first World Cup win in 1983.",
+    "Released": "2021-12-24T00:00:00Z",
+    "Year": 2021,
+    "Poster": "https://example.com/posters/83.jpg",
+    "Actors": ["Ranveer Singh", "Deepika Padukone"],
+    "Director": ["Kabir Khan"],
+    "durationMins": 162,
+    "language": "Hindi",
+    "releaseDate": "2021-12-24T00:00:00Z",
+    "country": "India",
+    "genre": ["Drama", "Sport"],
+    "rating": 8.0
+  },
+  {
+
+    "title": "Pushpa: The Rise",
+    "description": "A laborer rises through the ranks of a red sandalwood smuggling syndicate.",
+    "Released": "2021-12-17T00:00:00Z",
+    "Year": 2021,
+    "Poster": "https://example.com/posters/pushpa.jpg",
+    "Actors": ["Allu Arjun", "Rashmika Mandanna"],
+    "Director": ["Sukumar"],
+    "durationMins": 179,
+    "language": "Telugu",
+    "releaseDate": "2021-12-17T00:00:00Z",
+    "country": "India",
+    "genre": ["Action", "Drama"],
+    "rating": 7.6
+  }
+
+ {
+
+    "title": "Dangal",
+    "description": "A former wrestler trains his daughters to become world-class wrestlers.",
+    "Released": "2016-12-21T00:00:00Z",
+    "Year": 2016,
+    "Poster": "https://example.com/posters/dangal.jpg",
+    "Actors": ["Aamir Khan", "Sakshi Tanwar", "Fatima Sana Shaikh"],
+    "Director": ["Nitesh Tiwari"],
+    "durationMins": 161,
+    "language": "Hindi",
+    "releaseDate": "2016-12-21T00:00:00Z",
+    "country": "India",
+    "genre": ["Biography", "Drama", "Sport"],
+    "rating": 8.4
+  },
+  {
+
+    "title": "3 Idiots",
+    "description": "Two friends search for their long lost companion.",
+    "Released": "2009-12-25T00:00:00Z",
+    "Year": 2009,
+    "Poster": "https://example.com/posters/3idiots.jpg",
+    "Actors": ["Aamir Khan", "Kareena Kapoor", "Madhavan"],
+    "Director": ["Rajkumar Hirani"],
+    "durationMins": 170,
+    "language": "Hindi",
+    "releaseDate": "2009-12-25T00:00:00Z",
+    "country": "India",
+    "genre": ["Comedy", "Drama"],
+    "rating": 8.4
+  }
+]

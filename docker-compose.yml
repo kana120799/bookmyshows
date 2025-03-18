@@ -1,0 +1,75 @@
+version: "3.8"
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    image: my-book-app:1.0.0
+    container_name: book_app_cont
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=${DATABASE_URL}
+      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
+      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
+      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - NEXT_PUBLIC_BASE_URL=${NEXT_PUBLIC_BASE_URL}
+    depends_on:
+      - redis
+      - postgres
+
+  postgres:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    volumes:
+      - E:/my-bookmsh/postgres-data:/var/lib/postgresql/data # postgres default path
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+
+    # depends_on:
+    #   - postgres
+    #   - redis
+    # volumes:
+    #   - E:\BookMyShow\bookmyshow:/app
+#   local purpose uses :-
+#   postgres:
+#     image: postgres:15-alpine
+#     ports:
+#       - "5432:5432"
+#     volumes:
+#       - E:/my-bookmsh/postgres-data:/var/lib/postgresql/data # postgres default path
+#     environment:
+#       - POSTGRES_USER=${POSTGRES_USER}
+#       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+#       - POSTGRES_DB=${POSTGRES_DB}
+
+#   redis:
+#     image: redis:7-alpine
+#     ports:
+#       - "6379:6379"
+#     volumes:
+#       - redis-data:/data
+#     environment:
+#       - REDIS_HOST=${REDIS_HOST}
+#       - REDIS_PORT=${REDIS_PORT}
+
+# volumes:
+#   postgres-data:
+#     driver_opts:
+#       type: none
+#       device: E:/my-bookmsh/postgres-data
+#   redis-data:

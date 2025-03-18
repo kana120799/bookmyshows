@@ -1,0 +1,196 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum Role {
+  CUSTOMER
+  ADMIN
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELED
+}
+
+enum SeatType {
+  REGULAR
+  PREMIUM
+  VIP
+}
+
+enum PaymentMode {
+  CARD
+  UPI
+}
+
+enum PaymentStatus {
+  UNPAID
+  PENDING
+  COMPLETED
+  FAILED
+  DECLINED
+  CANCELED
+  REFUNDED
+}
+
+// User Model
+model User {
+  id        String  @id @default(uuid())
+  name      String
+  email     String  @unique @db.VarChar(200)
+  phone     String? @unique @db.VarChar(10)
+  password  String?  @db.VarChar(150)
+  role      Role    @default(CUSTOMER)
+  bookings  Booking[] 
+  notifications Notification[]
+  createdAt DateTime @default(now())
+}
+
+// Address Model
+model Address {
+  id       String @id @default(uuid())
+  street   String
+  city     String
+  state    String
+  zipCode  String
+  cinema   Cinema?
+}
+
+// Cinema Model
+model Cinema {
+  id        String @id @default(uuid())
+  name      String
+  addressId String? @unique
+  address   Address? @relation(fields: [addressId], references: [id])
+  halls     CinemaHall[]
+}
+
+// Cinema Hall (Theatres inside a Cinema)
+model CinemaHall {
+  id         String @id @default(uuid())
+  name       String
+  layout       Json
+  totalSeats   Int
+  cinemaId   String
+  cinema     Cinema @relation(fields: [cinemaId], references: [id])
+  shows      Show[]
+}
+
+// Movie Model
+model Movie {
+  id           String    @id @default(uuid())
+  title        String
+  description  String
+  Released     DateTime  
+  Year         Int       
+  Poster       String
+  Actors       String[]  
+  Director     String[]  
+  durationMins Int
+  language     String
+  releaseDate  DateTime
+  country      String
+  genre        String[]  
+  rating       Float?    @default(0.0)
+  shows        Show[]
+}
+
+// Show Model (Screening of a Movie in a Hall)
+model Show {
+  id           String @id @default(uuid())
+  movieId      String
+  cinemaHallId String
+  startTime    DateTime
+  movie        Movie   @relation(fields: [movieId], references: [id])
+  cinemaHall   CinemaHall @relation(fields: [cinemaHallId], references: [id])
+  seats        ShowSeat[]
+  bookings     Booking[]
+}
+
+
+
+// ShowSeat (Seats available for booking in a Show)
+model ShowSeat {
+  id         String @id @default(uuid())
+  isReserved Boolean @default(false)
+  status     String @default("AVAILABLE") // e.g., "AVAILABLE", "RESERVED"
+  price      Float
+  showId     String
+  show       Show @relation(fields: [showId], references: [id])
+  row        String // e.g., "A"
+  column     String // e.g., "C1"
+  type       SeatType // Optional, if not in layout
+  bookingSeats BookingSeat[]
+}
+
+// BookingSeat (Maps ShowSeats to a Booking)
+model BookingSeat {
+  id         String @id @default(uuid())
+  bookingId  String
+  booking    Booking @relation(fields: [bookingId], references: [id])
+  showSeatId String
+  showSeat   ShowSeat @relation(fields: [showSeatId], references: [id])
+}
+
+// Booking Model (Customer's Booking)
+model Booking {
+  id          String  @id @default(uuid())
+  userId      String
+  user        User @relation(fields: [userId], references: [id])
+  showId      String
+  show        Show @relation(fields: [showId], references: [id])
+  seats       BookingSeat[]
+  status      BookingStatus @default(PENDING)
+  payment     Payment?
+  ticket      MailTicket?
+}
+
+
+
+// Payment Model (For Booking Transactions)
+model Payment {
+  id           String @id @default(uuid())
+  amount       Float
+  mode         PaymentMode
+  createdOn    DateTime @default(now())
+  status       PaymentStatus
+  transactionId String?
+  bookingId    String @unique
+  booking      Booking @relation(fields: [bookingId], references: [id])
+}
+
+// Notification Model (For User Messages)
+model Notification {
+  id          String @id @default(uuid())
+  createdOn   DateTime @default(now())
+  content     String
+  userId      String
+  user        User @relation(fields: [userId], references: [id])
+}
+
+// Coupon Model (Discount Codes)
+model Coupon {
+  id         String @id @default(uuid())
+  code       String @unique
+  discount       Float
+  minPurchaseAmount Float? @default(0.0)
+  maxDiscount    Float? @default(0.0)
+  validTill      DateTime
+  applicableShows String[] // List of show IDs
+}
+
+// MailTicket (For Sending E-Tickets)
+model MailTicket {
+  id         String @id @default(uuid())
+  bookingId  String @unique
+  booking    Booking @relation(fields: [bookingId], references: [id])
+  email      String
+  sentAt     DateTime @default(now())
+}
