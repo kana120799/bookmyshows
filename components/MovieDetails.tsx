@@ -118,7 +118,6 @@ function MovieDetails({
 }: MovieCardProps) {
   const { data: session } = useSession();
 
-  console.log("dfjku", session);
   return (
     <>
       <div className="relative rounded-lg overflow-hidden  max-h-[47rem] ">
@@ -180,7 +179,7 @@ function MovieDetails({
                   {ageRating}
                 </span>
               )}
-              {genres.map((g, index) => (
+              {genres?.map((g, index) => (
                 <span
                   key={index}
                   className="px-3 py-1 bg-white/10 backdrop-blur-sm rounded-md text-lg h-8"

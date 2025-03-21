@@ -17,10 +17,10 @@ export async function middleware(request: NextRequest) {
   // Admin access
   if (userRole === "ADMIN") {
     if (pathname.startsWith("/customer")) {
-      return NextResponse.redirect(new URL("/admin/cinema", request.url));
+      return NextResponse.redirect(new URL("/admin", request.url));
     }
     if (!pathname.startsWith("/admin") && pathname !== "/") {
-      return NextResponse.redirect(new URL("/admin/cinema", request.url));
+      return NextResponse.redirect(new URL("/admin", request.url));
     }
   }
 

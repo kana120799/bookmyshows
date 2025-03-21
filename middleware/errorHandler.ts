@@ -1,6 +1,6 @@
+import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 
-// Make the params type generic
 type AsyncHandler<T = { id: string }> = (
   req: NextRequest,
   params: T
@@ -16,7 +16,6 @@ export const handleError = <T = { id: string }>(fn: AsyncHandler<T>) => {
       return await fn(request, resolvedParams);
     } catch (error) {
       if (error instanceof Error) {
-        console.log("fdsjhe3433", error.message);
         if (error.message === "User not found") {
           return NextResponse.json({ error: error.message }, { status: 404 });
         } else {
@@ -27,6 +26,8 @@ export const handleError = <T = { id: string }>(fn: AsyncHandler<T>) => {
         { error: "An unknown error occurred" },
         { status: 500 }
       );
+    } finally {
+      await prisma.$disconnect();
     }
   };
 };

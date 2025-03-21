@@ -87,7 +87,7 @@ export async function fetchMovies(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     Object.entries(filters).filter(([_, value]) => value !== undefined)
   );
-  // Calculate skip value for pagination
+  //  skip value for pagination
   const skip = (page - 1) * limit;
 
   const [movies, total] = await Promise.all([
@@ -98,7 +98,7 @@ export async function fetchMovies(
       take: limit,
       // fromCache: cachedResult !== null,
     }),
-    // Get total count for reference (optional)
+    // Get total count for reference
     prisma.movie.count({
       where: cleanedFilters,
     }),
@@ -145,23 +145,110 @@ export async function getMovieBySearch(search?: string) {
 
 // Get Movie getMoviesWithShows
 
-export async function getMoviesWithShows(): Promise<NextResponse> {
+export async function getMoviesWithRegionShows(
+  city?: string
+): Promise<NextResponse> {
   const movies = await prisma.movie.findMany({
     where: {
       shows: {
-        some: {}, // movie has at least one show
+        some: {
+          cinemaHall: {
+            cinema: {
+              address: city
+                ? {
+                    city: {
+                      equals: city, // e.g., "Mumbai"
+                    },
+                  }
+                : undefined,
+            },
+          },
+        },
       },
     },
-
     orderBy: {
       releaseDate: "desc",
     },
   });
 
   if (!movies.length) {
-    throw new Error("No movies with shows found");
+    throw new Error(`No movies with shows found${city ? ` in ${city}` : ""}`);
   }
   return NextResponse.json({ data: movies }, { status: 200 });
+}
+
+export async function getAdminBooking(
+  page: number = 1,
+  limit: number = 10
+): Promise<NextResponse> {
+  const skip = (page - 1) * limit;
+
+  const [bookings, total] = await Promise.all([
+    prisma.booking.findMany({
+      skip,
+      take: limit,
+      include: {
+        user: true,
+        show: {
+          include: {
+            movie: true,
+            cinemaHall: true,
+          },
+        },
+        seats: {
+          include: {
+            showSeat: true,
+          },
+        },
+        payment: true,
+      },
+    }),
+    prisma.booking.count(),
+  ]);
+
+  if (!bookings) {
+    throw new Error("Failed to fetch bookings");
+  }
+
+  return NextResponse.json(
+    {
+      data: bookings,
+      total,
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
+    },
+    { status: 200 }
+  );
+}
+
+export async function getAdminBookingByID({
+  bookingId,
+}: {
+  bookingId: string;
+}): Promise<NextResponse> {
+  const bookings = await prisma.booking.findFirst({
+    where: { id: bookingId },
+    include: {
+      user: true,
+      show: {
+        include: {
+          movie: true,
+          cinemaHall: true,
+        },
+      },
+      seats: {
+        include: {
+          showSeat: true,
+        },
+      },
+      payment: true,
+      ticket: true,
+    },
+  });
+  if (!bookings) {
+    throw new Error("Failed to fetch bookings");
+  }
+  return NextResponse.json({ data: bookings }, { status: 200 });
 }
 
 // export async function uploadMovie(

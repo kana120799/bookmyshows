@@ -1,7 +1,6 @@
 import { loginWithCredentials } from "@/action/authAction";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { z } from "zod";
 
@@ -42,7 +41,6 @@ function Register({
   isLoading,
   setIsLoading,
 }: LoginProps) {
-  const router = useRouter();
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleRegister = async (e: FormEvent<HTMLFormElement>) => {
@@ -91,11 +89,8 @@ function Register({
       }
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      alert("An error occurred during registration");
-    } finally {
       setIsLoading(false);
-      router.push("/");
-      router.refresh();
+      alert("An error occurred during registration");
     }
   };
 

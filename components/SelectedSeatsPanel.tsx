@@ -34,12 +34,12 @@ const SelectedSeatsPanel = ({
   const donationAmount = 0;
   const finalAmount = subTotal + donationAmount;
 
-  // Get selected seats display text
+  // Get selected seats
   const getSelectedSeatsText = () => {
     if (selectedSeats.length === 0) return "";
 
     const seatLabels = selectedSeats
-      .map((seatId) => {
+      ?.map((seatId) => {
         const seat = seats.find((s) => s.id === seatId);
         return seat ? `${seat.row}-${seat.column}` : "";
       })

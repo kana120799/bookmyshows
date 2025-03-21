@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
     }
 
-    // Read and parse the JSON file
+    //  parse the JSON file
     const jsonText = await file.text();
     const jsonData: unknown = JSON.parse(jsonText);
 
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Validate movie entry
-    const movies: MovieInput[] = jsonData.map((item) => {
+    const movies: MovieInput[] = jsonData?.map((item) => {
       const parsed = MovieSchema.safeParse(item);
       if (!parsed.success) {
         throw new Error(`Validation failed: ${parsed.error.message}`);
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
     });
 
     const result = await prisma.movie.createMany({
-      data: movies.map((movie) => ({
+      data: movies?.map((movie) => ({
         // id: crypto.randomUUID(),
         title: movie.title,
         description: movie.description,

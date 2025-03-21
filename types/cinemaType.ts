@@ -1,11 +1,11 @@
 type SeatLayout = {
-  seats: unknown[]; // You could define a more specific type for seats if known
+  seats: unknown[];
   totalSeats: number;
 };
 
 export type hallType = {
   name: string;
-  seats: SeatLayout; // Changed from layout to seats to match your input
+  seats: SeatLayout;
 };
 
 export type addressType = {
@@ -15,7 +15,6 @@ export type addressType = {
   zipCode: string;
 };
 
-// types/cinema.ts
 export interface Address {
   id: string;
   street: string;
@@ -27,7 +26,7 @@ export interface Address {
 export interface CinemaHall {
   id: string;
   name: string;
-  layout: JSON; // You might want to define a more specific type for layout
+  layout: JSON;
   totalSeats: number;
 }
 

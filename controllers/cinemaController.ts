@@ -28,7 +28,7 @@ import { addressType } from "@/types/cinemaType";
 //         },
 //       },
 //       halls: {
-//         create: data.halls.map((hall) => ({
+//         create: data.halls?.map((hall) => ({
 //           name: hall.name,
 //           totalSeats: Number(hall.totalSeats),
 //         })),
@@ -84,7 +84,7 @@ export async function addCinema(data: {
         },
       },
       halls: {
-        create: halls.map((hall) => ({
+        create: halls?.map((hall) => ({
           name: hall.name,
           layout: hall.seats.seats,
           totalSeats: hall.seats.totalSeats,
@@ -112,7 +112,6 @@ export async function getCinema(): Promise<NextResponse> {
   return NextResponse.json({ data: cinemas }, { status: 200 });
 }
 
-// Get all halls for a cinema by cinema ID
 export async function getCinemaHalls(cinemaId: string): Promise<NextResponse> {
   const cinemaExists = await prisma.cinema.findUnique({
     where: { id: cinemaId },
@@ -137,7 +136,7 @@ export async function getCinemaHalls(cinemaId: string): Promise<NextResponse> {
   return NextResponse.json(halls, { status: 200 });
 }
 
-// Delete a hall by hall ID from a cinema
+// Delete  hall by hall ID from a cinema
 export async function deleteHallFromCinema(
   cinemaId: string,
   hallId: string
@@ -150,7 +149,7 @@ export async function deleteHallFromCinema(
     throw new Error("Cinema not found");
   }
 
-  // Verify hall exists and belongs to this cinema
+  // Verify hall exists to this cinema
   const hall = await prisma.cinemaHall.findFirst({
     where: {
       id: hallId,
@@ -182,7 +181,7 @@ export async function deleteCinema(cinemaId: string): Promise<NextResponse> {
     });
     if (!cinema) throw new Error("Cinema not found");
 
-    const hallIds = cinema.halls.map((hall) => hall.id);
+    const hallIds = cinema.halls?.map((hall) => hall.id);
 
     // Delete all ShowSeats related to Shows in these halls
     await tx.showSeat.deleteMany({
@@ -297,14 +296,14 @@ export async function getCinemaById(cinemaId: string): Promise<NextResponse> {
 
 //     // Extract unique cinema halls from shows
 //     const halls = shows
-//       .map((show) => show.cinemaHall)
+//       ?.map((show) => show.cinemaHall)
 //       .filter(
 //         (hall, index, self) => index === self.findIndex((h) => h.id === hall.id)
 //       );
 
 //     // Extract unique cinemas from halls
 //     const cinemas = halls
-//       .map((hall) => hall.cinema)
+//       ?.map((hall) => hall.cinema)
 //       .filter(
 //         (cinema) =>
 //           cinema.address && // Ensure address exists
@@ -324,18 +323,18 @@ export async function getCinemaById(cinemaId: string): Promise<NextResponse> {
 
 //     // Structure the response data
 //     const responseData = {
-//       cinemas: cinemas.map((cinema) => ({
+//       cinemas: cinemas?.map((cinema) => ({
 //         id: cinema.id,
 //         name: cinema.name,
 //         address: cinema.address,
 //       })),
-//       shows: shows.map((show) => ({
+//       shows: shows?.map((show) => ({
 //         id: show.id,
 //         movieId: show.movieId,
 //         cinemaHallId: show.cinemaHallId,
 //         startTime: show.startTime,
 //       })),
-//       halls: halls.map((hall) => ({
+//       halls: halls?.map((hall) => ({
 //         id: hall.id,
 //         name: hall.name,
 //         totalSeats: hall.totalSeats,
@@ -449,14 +448,14 @@ export async function getCinemasByCityAndMovie(
 
     //  unique cinema halls from shows
     const halls = shows
-      .map((show) => show.cinemaHall)
+      ?.map((show) => show.cinemaHall)
       .filter(
         (hall, index, self) => index === self.findIndex((h) => h.id === hall.id)
       );
 
     //  unique cinemas from halls
     const cinemas = halls
-      .map((hall) => hall.cinema)
+      ?.map((hall) => hall.cinema)
       .filter(
         (cinema) =>
           cinema.address &&
@@ -476,18 +475,18 @@ export async function getCinemasByCityAndMovie(
 
     // Structure the response data
     const responseData = {
-      cinemas: cinemas.map((cinema) => ({
+      cinemas: cinemas?.map((cinema) => ({
         id: cinema.id,
         name: cinema.name,
         address: cinema.address,
       })),
-      shows: shows.map((show) => ({
+      shows: shows?.map((show) => ({
         id: show.id,
         movieId: show.movieId,
         cinemaHallId: show.cinemaHallId,
         startTime: show.startTime,
       })),
-      halls: halls.map((hall) => ({
+      halls: halls?.map((hall) => ({
         id: hall.id,
         name: hall.name,
         totalSeats: hall.totalSeats,

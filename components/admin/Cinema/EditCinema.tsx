@@ -1,4 +1,3 @@
-// app/cinema/[id]/edit/page.tsx
 "use client";
 
 import { useState, FormEvent } from "react";
@@ -195,7 +194,7 @@ export default function EditCinema() {
         {/* Cinema Halls */}
         <div className="space-y-4">
           <h2 className="text-lg font-semibold">Cinema Halls</h2>
-          {formData?.halls.map((hall, index) => (
+          {formData?.halls?.map((hall, index) => (
             <div key={hall.id || index} className="flex space-x-4 items-end">
               <div className="flex-1">
                 <label className="block text-sm font-medium text-gray-700">

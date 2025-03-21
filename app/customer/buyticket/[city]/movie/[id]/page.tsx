@@ -64,7 +64,7 @@ export default function Page() {
 
           const response = await axios.post(
             `/api/booking?selectedSeatIds=${bookingData
-              .map((seat) => seat.id)
+              ?.map((seat) => seat.id)
               .join(",")}&total=${bookingData.reduce((sum, seat) => {
               return sum + (seat?.price || 0);
             }, 0)}&showId=${cinemaShowId}&userId=${session?.user?.id}`
@@ -107,7 +107,7 @@ export default function Page() {
         <SelectedSeatsPanel
           seats={bookingData}
           setShowPayment={setShowPayment}
-          selectedSeats={bookingData.map((seat) => seat.id)}
+          selectedSeats={bookingData?.map((seat) => seat.id)}
           setTotalAmount={setTotalAmount}
         />
       )}

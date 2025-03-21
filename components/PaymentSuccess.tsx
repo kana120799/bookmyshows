@@ -18,25 +18,52 @@ function PaymentSuccess() {
   };
 
   return (
-    <main className="max-w-6xl mx-auto p-10 text-center border m-10 rounded-md bg-white shadow-md">
-      <div className="mb-10">
-        <h1 className="text-4xl font-extrabold mb-2 text-gray-800">
-          Thank you!
-        </h1>
-        <h2 className="text-2xl text-gray-600">
-          Your Ticket Mailed On Your email.
-        </h2>
-        <div className="bg-gray-100 p-6 rounded-md text-purple-600 mt-5 text-4xl font-bold shadow-sm">
-          Paid: ₹{amount}
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <main className="max-w-md w-full mx-auto p-6 text-center bg-white rounded-xl shadow-lg border border-gray-100">
+        <div className="space-y-6">
+          <div className="flex justify-center">
+            <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
+              <svg
+                className="w-8 h-8 text-green-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            </div>
+          </div>
+
+          {/* Heading */}
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold text-gray-900">
+              Payment Successful!
+            </h1>
+            <p className="text-gray-600">Thank you for your booking</p>
+          </div>
+
+          <div className="bg-gradient-to-r from-purple-50 to-indigo-50 p-4 rounded-lg border border-purple-100">
+            <p className="text-sm text-gray-600">Amount Paid</p>
+            <div className="text-3xl font-semibold text-purple-700">
+              ₹{amount}
+            </div>
+          </div>
+
+          <button
+            onClick={handleRedirect}
+            className="w-full mt-6 px-6 py-3 bg-gradient-to-r from-[#F84464] to-[#FF6B88] text-white font-medium rounded-lg hover:from-[#F84464]/90 hover:to-[#FF6B88]/90 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#F84464] focus:ring-opacity-50"
+          >
+            Return to Home
+          </button>
         </div>
-        <button
-          onClick={handleRedirect}
-          className="mt-10 px-6 py-3  text-white font-semibold rounded-lg bg-[#F84464] hover:bg-[#F84464]/90 text-xl transition-all duration-300"
-        >
-          Return to Home
-        </button>
-      </div>
-    </main>
+      </main>
+    </div>
   );
 }
 

@@ -44,3 +44,4 @@ next-env.d.ts
 /utils/ApiError.ts
 /utils/cookie.ts
 components/carousel/
+.github\workflows\cicd copy.yml

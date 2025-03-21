@@ -17,7 +17,7 @@ export async function setShow({
     );
   }
 
-  // Check if a show with the same movieId, Date and cinemaHallId already exists
+  // show with the same movieId, Date and cinemaHallId already exists
   const existingShow = await prisma.show.findFirst({
     where: {
       movieId: movieId,
@@ -64,21 +64,21 @@ export async function deleteShow(showId: string) {
     });
     if (!show) throw new Error("Show not found");
 
-    // Delete all related ShowSeats
+    // Delete all ShowSeats
     await tx.showSeat.deleteMany({
       where: {
         showId: showId,
       },
     });
 
-    // Delete any related Bookings
+    // Delete  Bookings
     await tx.booking.deleteMany({
       where: {
         showId: showId,
       },
     });
 
-    // Delete any related BookingSeats (if they exist independently)
+    // Delete BookingSeats
     await tx.bookingSeat.deleteMany({
       where: {
         showSeat: {

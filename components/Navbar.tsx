@@ -24,15 +24,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 export default function Navbar() {
   const dispatch = useDispatch();
   const pathname = usePathname();
+  const router = useRouter();
   // ("/customer/home/[city]")
   const isExactCityPath = /^\/customer\/home\/[^/]+$/.test(pathname);
   const { data: session, status } = useSession();
-  console.log("j8df", session, status);
   const { selectedCity } = useSelector((state: RootState) => state.city);
 
   // const [isOpen, setIsOpen] = useState(false);
@@ -193,6 +193,22 @@ export default function Navbar() {
                     >
                       Sign out
                     </DropdownMenuItem>
+                    {/* <DropdownMenuItem
+                      onClick={() => {
+                        router.push("/customer/profile");
+                      }}
+                      className="cursor-pointer text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 text-xl"
+                    >
+                      Profile
+                    </DropdownMenuItem> */}
+                    <DropdownMenuItem
+                      onClick={() => {
+                        router.push("/customer/mybookings");
+                      }}
+                      className="cursor-pointer text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 text-xl"
+                    >
+                      My Bookings
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               )}
@@ -204,9 +220,16 @@ export default function Navbar() {
             </button> */}
           </div>
         </div>
+      </nav>
+    </>
+  );
+}
 
-        {/* Mobile Menu */}
-        {/* <div
+{
+  /* Mobile Menu */
+}
+{
+  /* <div
           className={`fixed top-0 right-0 h-full w-72 bg-white shadow-xl transform ${
             isOpen ? "translate-x-0" : "translate-x-full"
           } transition-transform duration-300 ease-in-out md:hidden z-50`}
@@ -270,8 +293,5 @@ export default function Navbar() {
               Sign in
             </Button>
           </div>
-        </div> */}
-      </nav>
-    </>
-  );
+        </div> */
 }

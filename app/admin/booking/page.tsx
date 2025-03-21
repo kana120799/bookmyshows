@@ -1,10 +1,10 @@
-import ShowLayout from "@/components/admin/Show/ShowsLayout";
+import BookingLayout from "@/components/admin/Booking/BookingLayout";
 import React from "react";
 
 function page() {
   return (
     <>
-      <ShowLayout page="booking" />
+      <BookingLayout />
     </>
   );
 }
