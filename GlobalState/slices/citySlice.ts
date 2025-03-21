@@ -19,7 +19,7 @@ interface CityState {
 }
 
 const initialState: CityState = {
-  selectedCity: "Mumbai",
+  selectedCity: "mumbai",
   showPannel: false,
 };
 const citySlice = createSlice({

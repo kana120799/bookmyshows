@@ -123,6 +123,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return true;
     },
     async redirect({ baseUrl }) {
+      console.log("Redirecting to:", baseUrl);
       return baseUrl;
     },
   },

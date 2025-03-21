@@ -131,7 +131,7 @@ const SeatsSelection = ({
 
         {/* Seat Grid */}
         <div className="grid gap-6 justify-center">
-          {Object.entries(seatsByRow).map(([row, rowSeats]) => (
+          {Object.entries(seatsByRow)?.map(([row, rowSeats]) => (
             <div
               key={row}
               className="flex items-center gap-4 group transition-all duration-300 "
@@ -142,7 +142,7 @@ const SeatsSelection = ({
               <div className="flex gap-3">
                 {rowSeats
                   .sort((a, b) => a.column.localeCompare(b.column))
-                  .map((seat) => (
+                  ?.map((seat) => (
                     <button
                       key={seat.id}
                       onClick={() => handleSeatClick(seat)}
@@ -164,7 +164,7 @@ const SeatsSelection = ({
             { color: "bg-purple-600", label: "Premium" },
             { color: "bg-blue-600", label: "Regular" },
             { color: "bg-gray-500", label: "Reserved" },
-          ].map(({ color, label }) => (
+          ]?.map(({ color, label }) => (
             <div key={label} className="flex items-center gap-2">
               <div className={`w-5 h-5 ${color} rounded-full`} />
               <span className="text-gray-900">{label}</span>

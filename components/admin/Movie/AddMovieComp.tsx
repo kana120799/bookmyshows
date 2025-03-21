@@ -53,7 +53,7 @@
 //       // Append each actor individually
 //       formData.actors
 //         .split(",")
-//         .map((actor) => actor.trim())
+//         ?.map((actor) => actor.trim())
 //         .forEach((actor) => {
 //           movieData.append("actors[]", actor);
 //         });
@@ -61,7 +61,7 @@
 //       // Append each director individually
 //       formData.director
 //         .split(",")
-//         .map((dir) => dir.trim())
+//         ?.map((dir) => dir.trim())
 //         .forEach((director) => {
 //           movieData.append("director[]", director);
 //         });
@@ -77,7 +77,7 @@
 //       // Append each genre individually
 //       formData.genre
 //         .split(",")
-//         .map((g) => g.trim())
+//         ?.map((g) => g.trim())
 //         .forEach((genre) => {
 //           movieData.append("genre[]", genre);
 //         });

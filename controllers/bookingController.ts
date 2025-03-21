@@ -24,9 +24,9 @@ export async function lockBooking({
 }) {
   // Todo :-  add session to verify user.
 
-  const lockTTL = 10 * 60; // 10 minutes
+  const lockTTL = 10 * 60;
 
-  // Verify if showId is valid
+  //  if showId is valid
   const show = await prisma.show.findUnique({
     where: {
       id: showId,
@@ -37,7 +37,7 @@ export async function lockBooking({
     return NextResponse.json({ error: "Invalid show ID" }, { status: 404 });
   }
 
-  // Check if selected seat is already locked
+  //  if selected seat is already locked
   for (const seatId of selectedSeatIds) {
     const lockKey = `seat:lock:${seatId}`;
     const isLocked = await redis.get(lockKey);
@@ -58,7 +58,7 @@ export async function lockBooking({
 
   const lockResults = await multi.exec();
 
-  // Handle case where lockResults is null
+  // when lockResults is null
   if (!lockResults) {
     await releaseSeats(selectedSeatIds);
     return NextResponse.json(
@@ -67,7 +67,7 @@ export async function lockBooking({
     );
   }
 
-  // Check if any lock operation failed
+  // Check if any lock  failed
   if (lockResults.some(([err, result]) => err || result === null)) {
     // If any lock failed, rollback all locks
     await releaseSeats(selectedSeatIds);
@@ -122,7 +122,7 @@ async function sendBookingEmail({
   bookingId: string;
 }) {
   const seatDetails = seats
-    .map((seat) => `${seat.row}${seat.column}`)
+    ?.map((seat) => `${seat.row}${seat.column}`)
     .join(", ");
 
   const resend = new Resend(process.env.RESEND_API_KEY);
@@ -192,17 +192,14 @@ async function createBooking({
           status: "CONFIRMED",
         },
       });
-      console.log("AAA", booking);
 
       // Link seats to booking
       await tx.bookingSeat.createMany({
-        data: selectedSeatIds.map((seatId) => ({
+        data: selectedSeatIds?.map((seatId) => ({
           bookingId: booking.id,
           showSeatId: seatId,
         })),
       });
-
-      console.log("BBB");
 
       // Update seat status
       await tx.showSeat.updateMany({
@@ -212,7 +209,6 @@ async function createBooking({
           status: "RESERVED",
         },
       });
-      console.log("CCCC");
 
       // Create payment record
       const payment = await tx.payment.create({
@@ -223,7 +219,6 @@ async function createBooking({
           status: "COMPLETED",
         },
       });
-      console.log("DDDD", payment);
 
       return { booking, payment };
     } catch (error) {
@@ -256,11 +251,9 @@ export async function confirmBooking({
 
   const bookingData = JSON.parse(bookingDataStr);
   const { selectedSeatIds, showId } = bookingData;
-  console.log("fsdjf883BBBBB", bookingData, selectedSeatIds, showId);
 
   // Verify seats are still available
   const seatsAvailable = await verifySeatsAvailability(selectedSeatIds);
-  console.log("fsdjf883CCCCC", seatsAvailable);
 
   if (!seatsAvailable.check) {
     await releaseSeats(selectedSeatIds);
@@ -278,7 +271,6 @@ export async function confirmBooking({
     selectedSeatIds,
     amount,
   });
-  console.log("fsdjf883DDDDD", booking, payment);
 
   // Fetch additional details for notification and email
   const showDetails = await prisma.show.findUnique({
@@ -288,12 +280,10 @@ export async function confirmBooking({
       cinemaHall: true,
     },
   });
-  console.log("fsdjf883EEEE", showDetails);
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
   });
-  console.log("fsdjf883FFF", user);
 
   if (!user || !showDetails) {
     throw new Error("User or show details not found.");
@@ -305,14 +295,12 @@ export async function confirmBooking({
       content: `Your booking for ${showDetails?.movie.title} at ${
         showDetails?.cinemaHall.name
       } has been confirmed. Seats: ${seatsAvailable.seats
-        .map((s) => `${s.row}${s.column}`)
+        ?.map((s) => `${s.row}${s.column}`)
         .join(", ")}`,
     },
   });
 
-  console.log("fsdjf883_STRIPE_KEY", process.env.STRIPE_SECRET_KEY);
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
-  console.log("fsdjf883GGGG", stripe);
 
   const paymentIntentPayload = {
     amount: amount,
@@ -334,7 +322,6 @@ export async function confirmBooking({
     },
     automatic_payment_methods: { enabled: true },
   };
-  console.log("fsdjf883_PAYLOAD", paymentIntentPayload);
   const paymentIntent = await stripe.paymentIntents.create(
     paymentIntentPayload
   );

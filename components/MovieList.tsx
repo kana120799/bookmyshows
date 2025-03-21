@@ -125,7 +125,7 @@ function MovieList() {
                   value={selectedGenre}
                   onChange={(e) => setSelectedGenre(e.target.value)}
                 >
-                  {genreOptions.map((genre) => (
+                  {genreOptions?.map((genre) => (
                     <option
                       key={genre}
                       value={genre === "All Genres" ? "" : genre}

@@ -41,10 +41,9 @@ function Login({
   setIsLoading,
   isLoading,
 }: LoginProps) {
-  const router = useRouter();
   const { update } = useSession();
   const [errors, setErrors] = useState<Record<string, string>>({});
-
+  const router = useRouter();
   const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
@@ -72,15 +71,14 @@ function Login({
       await loginWithCredentials(data.email, data.password);
       setIsLoginVisible(false);
       await update();
+      router.push("/");
+      router.refresh();
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       setErrors({
         general: "Login failed. Please check your credentials and try again.",
       });
-    } finally {
       setIsLoading(false);
-      router.push("/");
-      router.refresh();
     }
   };
 

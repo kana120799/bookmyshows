@@ -52,7 +52,7 @@ const MovieCard = ({ data, setLoading, selectedCity }: MovieCardProps) => {
             {data.title}
           </h3>
           <div className="flex flex-wrap gap-1 mt-2">
-            {data.genre.map((g, idx) => (
+            {data.genre?.map((g, idx) => (
               <span
                 key={idx}
                 className="text-lg bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 px-2 py-1 rounded"

@@ -1,10 +1,10 @@
-import AdminDashboard from "@/components/AdminDashboard";
+import AdminPage from "@/components/AdminPage";
 import React from "react";
 
 function page() {
   return (
     <>
-      <AdminDashboard />
+      <AdminPage />
     </>
   );
 }

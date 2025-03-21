@@ -31,7 +31,7 @@ export async function initializeShowSeats({
   premiumPrice: number;
   regularPrice: number;
 }) {
-  // Check if seats already exist for this showId
+  // Check seats already exist for this showId
   const existingSeatsCount = await prisma.showSeat.count({
     where: { showId: id },
   });
@@ -56,12 +56,12 @@ export async function initializeShowSeats({
 
   const layout = show.cinemaHall.layout as SeatLayout;
 
-  // Generate show seats based on the layout
+  //  show seats based on  layout
   const showSeats: ShowSeat[] = Object.entries(layout).flatMap(
     ([row, seats]: [string, (Seat | null)[]]) =>
       seats
         .filter((seat): seat is Seat => seat !== null)
-        .map((seat) => {
+        ?.map((seat) => {
           const price =
             seat.type === "VIP"
               ? vipPrice
@@ -81,7 +81,7 @@ export async function initializeShowSeats({
         })
   );
 
-  // Create the show seats in the database
+  // Create  show seats
   await prisma.showSeat.createMany({
     data: showSeats,
   });

@@ -12,7 +12,7 @@ export const getSelectedSeatsText = (
   if (selectedSeats.length === 0) return "";
 
   const seatLabels = selectedSeats
-    .map((seatId) => {
+    ?.map((seatId) => {
       const seat = seats.find((s) => s.id === seatId);
       return seat ? `${seat.row}-${seat.column}` : "";
     })

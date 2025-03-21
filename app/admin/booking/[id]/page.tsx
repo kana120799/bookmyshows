@@ -1,10 +1,10 @@
-import AdminSeatsView from "@/components/admin/Show/AdminSeatsView";
+import BookingDetails from "@/components/admin/Booking/BookingDetails";
 import React from "react";
 
 function page() {
   return (
     <>
-      <AdminSeatsView />
+      <BookingDetails />
     </>
   );
 }

@@ -12,9 +12,9 @@ const CityPanel = () => {
   const [searchCities, setSearchCities] = useState("");
 
   function actionCityChange(city: { city: string }) {
-    dispatch(setSelectedCity(city.city.toLowerCase()));
+    dispatch(setSelectedCity(city.city?.toLowerCase()));
     dispatch(setCityToggle());
-    redirect(`/customer/home/${city.city.toLowerCase()}`);
+    redirect(`/customer/home/${city.city?.toLowerCase()}`);
   }
 
   const limittedCities = () => {
@@ -23,9 +23,9 @@ const CityPanel = () => {
         (city, index) =>
           !limitCitiesState &&
           index < 9 &&
-          city.city.toLowerCase().includes(searchCities.toLowerCase())
+          city.city?.toLowerCase()?.includes(searchCities?.toLowerCase())
       )
-      .map((city) => (
+      ?.map((city) => (
         <button
           key={city.city}
           className="flex flex-col items-center gap-2 p-2 rounded-md transition-colors"
@@ -43,9 +43,9 @@ const CityPanel = () => {
       .filter(
         (city) =>
           limitCitiesState &&
-          city.city.toLowerCase().includes(searchCities.toLowerCase())
+          city.city?.toLowerCase()?.includes(searchCities.toLowerCase())
       )
-      .map((city) => (
+      ?.map((city) => (
         <button
           key={city.city}
           className="flex flex-col items-center gap-2 p-2  rounded-md transition-colors"

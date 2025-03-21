@@ -11,6 +11,29 @@ export async function getUsers() {
   return NextResponse.json({ data: user }, { status: 200 });
 }
 
+export async function getUserBookings(userId: string) {
+  const bookings = await prisma.booking.findMany({
+    where: { userId },
+    include: {
+      show: {
+        include: {
+          cinemaHall: true,
+        },
+      },
+      seats: {
+        include: {
+          showSeat: true,
+        },
+      },
+      payment: true,
+    },
+  });
+  if (!bookings) {
+    throw new Error("Failed to fetch bookings");
+  }
+  return NextResponse.json({ data: bookings }, { status: 200 });
+}
+
 export async function deleteUser(userId: string) {
   const deletedUser = await prisma.user.delete({ where: { id: userId } });
   if (!deletedUser) {
