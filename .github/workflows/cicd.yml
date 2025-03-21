@@ -131,144 +131,59 @@ jobs:
         run: vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
 
   # :::::::::::::::::::::::::::::::::      :::::::::::::::::::::::::::::::::::::::::::
-  # :::::::::::::::::::::::::::::::::   pipeline version 1 :::::::::::::::::::::::::::::::::::::::::::
+  # :::::::::::::::::::::::::::::::::   vercel deploy  :::::::::::::::::::::::::::::::::::::::::::
   # :::::::::::::::::::::::::::::::::      :::::::::::::::::::::::::::::::::::::::::::
-# name: CI/CD Pipeline
+  # deploy-to-vercel:
+  #   needs: build-and-test
+  #   runs-on: ubuntu-latest
+  #   if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
 
-# on:
-#   pull_request:
-#     branches:
-#       - main
+  #     - name: Setup Node.js
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: ${{ env.NODE_VERSION }}
 
-# env:
-#   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-#   VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-#   NODE_VERSION: 20
+  #     - name: Install Vercel CLI
+  #       run: npm install --global vercel@latest
 
-# jobs:
-#   check-connections:
-#     runs-on: ubuntu-latest
-#     steps:
-#       - name: Checkout repository
-#         uses: actions/checkout@v4
+  #     - name: Debug Vercel Environment Variables
+  #       run: |
+  #         echo "VERCEL_ORG_ID: $VERCEL_ORG_ID"
+  #         echo "VERCEL_PROJECT_ID: $VERCEL_PROJECT_ID"
+  #         echo "VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}" | sed 's/./*/g' # Mask token for safety
 
-#       - name: Setup Node.js
-#         uses: actions/setup-node@v4
-#         with:
-#           node-version: ${{ env.NODE_VERSION }}
-#           cache: "npm"
+  #     - name: Add Environment Variables to Vercel
+  #       run: |
+  #         vercel env add DATABASE_URL ${{ secrets.DATABASE_URL }} --token=${{ secrets.VERCEL_TOKEN }}
+  #         vercel env add REDIS_HOST ${{ secrets.REDIS_HOST }} --token=${{ secrets.VERCEL_TOKEN }}
+  #         vercel env add REDIS_PORT ${{ secrets.REDIS_PORT }} --token=${{ secrets.VERCEL_TOKEN }}
+  #         vercel env add REDIS_PASSWORD ${{ secrets.REDIS_PASSWORD }} --token=${{ secrets.VERCEL_TOKEN }}
 
-#       - name: Install dependencies
-#         run: npm ci
+  #     - name: Pull Vercel Environment
+  #       run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
 
-#       - name: Install Vercel CLI
-#         run: npm install --global vercel@latest
+  #     - name: Generate Prisma Client for Vercel Build
+  #       run: npx prisma generate
 
-#       - name: Pull Vercel Environment
-#         run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+  #     - name: Build Project
+  #       run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
 
-#       - name: Test PostgreSQL Connection
-#         env:
-#           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-#         run: |
-#           npx prisma db pull --force
-#           echo "PostgreSQL connection successful"
+  #     - name: Deploy to Vercel
+  #       run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
 
-#       - name: Install Redis CLI
-#         run: |
-#           sudo apt-get update
-#           sudo apt-get install -y redis-tools
+  # push the Docker image to a registry
+  # - name: Login to Docker Hub
+  #   run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-#       - name: Test Redis Connection
-#         run: |
-#           echo "Testing Redis connection..."
-#           redis-cli -h ${{ secrets.REDIS_HOST }} -p ${{ secrets.REDIS_PORT }} -a ${{ secrets.REDIS_PASSWORD }} ping
+  # - name: Push Docker Image
+  #   run: docker push bookmyshow-app:latest
 
-#   deploy:
-#     needs: check-connections
-#     runs-on: ubuntu-latest
-#     steps:
-#       - name: Checkout repository
-#         uses: actions/checkout@v4
-
-#       - name: Setup Node.js
-#         uses: actions/setup-node@v4
-#         with:
-#           node-version: ${{ env.NODE_VERSION }}
-#           cache: "npm"
-
-#       - name: Install dependencies
-#         run: npm ci
-
-#       - name: Install Vercel CLI
-#         run: npm install --global vercel@latest
-
-#       - name: Pull Vercel Environment
-#         run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
-
-#       - name: Generate Prisma Client
-#         run: npx prisma generate
-
-#       - name: Build Project
-#         run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
-
-#       - name: Deploy to Vercel
-#         run: vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
-
-# :::::::::::::::::::::::::::::::::      :::::::::::::::::::::::::::::::::::::::::::
-# :::::::::::::::::::::::::::::::::   vercel deploy  :::::::::::::::::::::::::::::::::::::::::::
-# :::::::::::::::::::::::::::::::::      :::::::::::::::::::::::::::::::::::::::::::
-# deploy-to-vercel:
-#   needs: build-and-test
-#   runs-on: ubuntu-latest
-#   if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-#   steps:
-#     - name: Checkout code
-#       uses: actions/checkout@v4
-
-#     - name: Setup Node.js
-#       uses: actions/setup-node@v4
-#       with:
-#         node-version: ${{ env.NODE_VERSION }}
-
-#     - name: Install Vercel CLI
-#       run: npm install --global vercel@latest
-
-#     - name: Debug Vercel Environment Variables
-#       run: |
-#         echo "VERCEL_ORG_ID: $VERCEL_ORG_ID"
-#         echo "VERCEL_PROJECT_ID: $VERCEL_PROJECT_ID"
-#         echo "VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}" | sed 's/./*/g' # Mask token for safety
-
-#     - name: Add Environment Variables to Vercel
-#       run: |
-#         vercel env add DATABASE_URL ${{ secrets.DATABASE_URL }} --token=${{ secrets.VERCEL_TOKEN }}
-#         vercel env add REDIS_HOST ${{ secrets.REDIS_HOST }} --token=${{ secrets.VERCEL_TOKEN }}
-#         vercel env add REDIS_PORT ${{ secrets.REDIS_PORT }} --token=${{ secrets.VERCEL_TOKEN }}
-#         vercel env add REDIS_PASSWORD ${{ secrets.REDIS_PASSWORD }} --token=${{ secrets.VERCEL_TOKEN }}
-
-#     - name: Pull Vercel Environment
-#       run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-
-#     - name: Generate Prisma Client for Vercel Build
-#       run: npx prisma generate
-
-#     - name: Build Project
-#       run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-
-#     - name: Deploy to Vercel
-#       run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
-
-# push the Docker image to a registry
-# - name: Login to Docker Hub
-#   run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-
-# - name: Push Docker Image
-#   run: docker push bookmyshow-app:latest
-
-# :::::::::::::::::::::::::::::::::      :::::::::::::::::::::::::::::::::::::::::::
-# :::::::::::::::::::::::::::::::::   for local redis and postgres   :::::::::::::::::::::::::::::::::::::::::::
-# :::::::::::::::::::::::::::::::::      :::::::::::::::::::::::::::::::::::::::::::
+  # :::::::::::::::::::::::::::::::::      :::::::::::::::::::::::::::::::::::::::::::
+  # :::::::::::::::::::::::::::::::::   for local redis and postgres   :::::::::::::::::::::::::::::::::::::::::::
+  # :::::::::::::::::::::::::::::::::      :::::::::::::::::::::::::::::::::::::::::::
 # name: BookmyShow Pipeline
 
 # # pipeline runs after merging a PR or directly pushing to main. pull_request:, push:
