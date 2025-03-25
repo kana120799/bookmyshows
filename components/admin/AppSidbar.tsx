@@ -1,5 +1,11 @@
 "use client";
-import { Calendar, Home, LayoutDashboard, Settings } from "lucide-react";
+import {
+  Calendar,
+  Home,
+  LayoutDashboard,
+  Settings,
+  LogOut,
+} from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -11,7 +17,9 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import Link from "next/link";
-import { usePathname } from "next/navigation"; // Import usePathname
+import { usePathname } from "next/navigation";
+import { useState } from "react";
+import { handleSignOut } from "@/action/SignOut";
 
 const items = [
   {
@@ -39,23 +47,61 @@ const items = [
     url: "/admin/users",
     icon: Settings,
   },
+  {
+    title: "Sign Out",
+    url: "#",
+    icon: LogOut,
+    isSignOut: true,
+  },
 ];
 
 export function AppSidebar() {
-  const pathname = usePathname(); // Get current pathname
+  const pathname = usePathname();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   return (
     <Sidebar className="bg-gray-900 text-white w-64 min-h-screen border-r border-gray-800">
       <SidebarContent>
-        <SidebarGroup className="py-6">
-          <SidebarGroupLabel className="text-red-500 text-3xl font-bold px-6 mb-10 tracking-tight">
-            BookMyShow
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
+        <SidebarGroup className="py-6 flex flex-col h-full">
+          <SidebarGroupContent className="flex flex-col h-full">
+            <SidebarGroupLabel className="text-red-500 text-3xl font-bold px-6 mb-10 tracking-tight">
+              BookMyShow
+            </SidebarGroupLabel>
+            <SidebarMenu className="flex flex-col flex-1">
               {items.map((item) => {
-                // Check if current item is active
                 const isActive = pathname === item.url;
+
+                if (item.isSignOut) {
+                  return (
+                    <SidebarMenuItem
+                      key={item.title}
+                      className="mt-auto mb-2" // Push to bottom
+                    >
+                      <SidebarMenuButton
+                        onClick={() => {
+                          async function signOutAdmin() {
+                            setIsLoggingOut(true);
+                            await handleSignOut();
+                            window.location.href = "/";
+                          }
+                          signOutAdmin();
+                        }}
+                        disabled={isLoggingOut}
+                        className={`w-full justify-start px-6 py-3 rounded-lg group transition-colors duration-200 text-gray-200 hover:bg-gray-200 hover:text-white
+                          ${
+                            isLoggingOut ? "opacity-50 cursor-not-allowed" : ""
+                          }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <item.icon className="h-5 w-5 text-gray-400 " />
+                          <span className="text-xl font-semibold text-gray-700">
+                            {item.title}
+                          </span>
+                        </div>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                }
 
                 return (
                   <SidebarMenuItem key={item.title} className="mb-2">
@@ -68,19 +114,13 @@ export function AppSidebar() {
                             : "text-gray-200 hover:bg-gray-200 hover:text-white"
                         }`}
                     >
+                      {/* group-hover:text-red-500 */}
                       <Link href={item.url} className="flex items-center gap-3">
-                        {/* <item.icon
+                        <item.icon
                           className={`h-5 w-5 transition-colors duration-200
-                            ${
-                              isActive
-                                ? "text-red-500"
-                                : "text-gray-400 group-hover:text-red-500"
-                            }`}
-                        /> */}
-                        <span
-                          className={`text-xl font-semibold
-                            ${"text-gray-700"}`}
-                        >
+                            ${isActive ? "text-red-500" : "text-gray-400 "}`}
+                        />
+                        <span className="text-xl font-semibold text-gray-700">
                           {item.title}
                         </span>
                       </Link>

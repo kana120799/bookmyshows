@@ -78,7 +78,7 @@ export async function addCinema(data: {
       address: {
         create: {
           street: address.street,
-          city: address.city,
+          city: address.city.toLowerCase(),
           state: address.state,
           zipCode: address.zipCode,
         },

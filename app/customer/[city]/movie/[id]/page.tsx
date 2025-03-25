@@ -14,13 +14,17 @@ interface MovieData {
   description: string;
   rating: number;
   voteCount: number;
-  duration: string;
+  durationMins: number;
   genres: string[];
   releaseDate: string;
   language: string;
   ageRating: string;
   Poster: string;
   selectedCity: string;
+  country: string;
+  Year: number;
+  Director: string[];
+  Actors: string[];
 }
 
 export default function Page() {
@@ -68,14 +72,35 @@ export default function Page() {
         description={movieData.description}
         rating={movieData.rating}
         voteCount={movieData.voteCount}
-        duration={movieData.duration}
-        genres={movieData.genres}
+        durationMins={movieData.durationMins}
+        genre={movieData.genres}
         releaseDate={movieData.releaseDate}
         language={movieData.language}
         ageRating={movieData.ageRating}
         Poster={movieData.Poster}
+        Director={movieData.Director}
+        Actors={movieData.Actors}
+        country={movieData.country}
+        Year={movieData.Year}
         selectedCity={selectedCity}
       />
+      {/* <MovieDetails
+        id="1"
+        title="Chhaava"
+        description="A captivating historical drama following the journey of a warrior through extraordinary circumstances, blending emotion, action, and unforgettable moments. The film showcases spectacular battle sequences and emotional depth as it explores themes of loyalty, sacrifice, and honor in a turbulent time."
+        rating={9.3}
+        voteCount={180000}
+        durationMins={161}
+        genre={["Action", "Drama", "Historical"]}
+        releaseDate="2023-12-01"
+        language="Hindi"
+        ageRating="UA16+"
+        Poster="https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=1925&auto=format&fit=crop"
+        Director={["Rajesh Kumar", "Priya Singh"]}
+        Actors={["Vicky Kaushal", "Rashmika Mandanna", "Akshaye Khanna"]}
+        country="India"
+        Year={2023}
+      /> */}
     </>
   );
 }

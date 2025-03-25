@@ -11,6 +11,12 @@ export async function POST(request: Request) {
       { status: 400 }
     );
   }
+  if (
+    email === process.env.ADMIN_EMAIL &&
+    password === process.env.ADMIN_PASSWORD
+  ) {
+    return NextResponse.json({ error: "Invalid Credential" }, { status: 409 });
+  }
 
   const existingUser = await prisma.user.findUnique({ where: { email } });
   if (existingUser) {
@@ -26,7 +32,6 @@ export async function POST(request: Request) {
       role: "CUSTOMER",
     },
   });
-
   return NextResponse.json(
     { message: "User registered successfully", userId: user.id },
     { status: 201 }

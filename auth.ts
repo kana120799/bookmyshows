@@ -3,8 +3,10 @@ import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
 import { comparePassword, hashedPassword } from "./action/hash";
+// import { dbQueryErrors } from "@/lib/metrics";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  trustHost: true,
   providers: [
     GoogleProvider({
       clientId: process.env.AUTH_GOOGLE_ID,
@@ -66,6 +68,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         // Regular user login
         const user = await prisma.user.findUnique({ where: { email } });
         if (!user || !user.password) {
+          // dbQueryErrors.inc({
+          //   model: "user",
+          //   error_type: "Invalid credentials",
+          // });
+
           throw new Error("Invalid credentials");
         }
 

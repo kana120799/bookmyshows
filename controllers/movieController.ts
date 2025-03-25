@@ -1,6 +1,7 @@
 import { MovieType, MovieFilters } from "@/types/movieType";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+// import { dbQueryDuration, httpRequestDuration } from "@/lib/metrics";
 // import { redis } from "@/utils/redisClient";
 // import cloudinary from "@/lib/cloudinary";
 // import {
@@ -16,10 +17,10 @@ export async function addMovie(input: MovieType): Promise<NextResponse> {
   //     data: input,
   //   });
   // }
-  console.log("Fsdnfjsdfsdfsd", input);
   // await prisma.movie.create({
   //   data: input,
   // });
+  console.log(input);
   return NextResponse.json({ message: "Data Added" }, { status: 200 });
 }
 
@@ -70,6 +71,8 @@ export async function fetchMovies(
   //   cacheError = error;
   //   console.error("Redis Cache Error (Falling back to DB):", cacheError);
   // }
+  // const start = Date.now();
+
   const filters: MovieFilters = {
     OR: search
       ? [
@@ -104,6 +107,8 @@ export async function fetchMovies(
     }),
   ]);
 
+  // const duration = (Date.now() - start) / 1000;
+  // dbQueryDuration.labels("movie", "get", "success").observe(duration);
   const response = {
     data: movies,
     page,
@@ -125,7 +130,6 @@ export async function fetchMovies(
 }
 
 export async function getMovieBySearch(search?: string) {
-  console.log("sdfjsfsd434343", search);
   const filters: MovieFilters = {
     OR: search
       ? [
@@ -148,6 +152,7 @@ export async function getMovieBySearch(search?: string) {
 export async function getMoviesWithRegionShows(
   city?: string
 ): Promise<NextResponse> {
+  // const start = Date.now();
   const movies = await prisma.movie.findMany({
     where: {
       shows: {
@@ -157,7 +162,7 @@ export async function getMoviesWithRegionShows(
               address: city
                 ? {
                     city: {
-                      equals: city, // e.g., "Mumbai"
+                      equals: city,
                     },
                   }
                 : undefined,
@@ -171,9 +176,14 @@ export async function getMoviesWithRegionShows(
     },
   });
 
+  // const duration = (Date.now() - start) / 1000;
+
   if (!movies.length) {
+    // httpRequestDuration.labels("POST", "/api/movie", "500").observe(duration);
     throw new Error(`No movies with shows found${city ? ` in ${city}` : ""}`);
   }
+
+  // httpRequestDuration.labels("POST", "/api/movie", "200").observe(duration);
   return NextResponse.json({ data: movies }, { status: 200 });
 }
 
@@ -284,7 +294,6 @@ export async function getAdminBookingByID({
 //     );
 
 //     const imageUrl: string = uploadResponse.secure_url;
-//     console.log("nuy38yuhfdf", imageUrl);
 //     await prisma.movie.update({
 //       where: {
 //         id: movieId,

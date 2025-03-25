@@ -179,9 +179,15 @@ const ShowPriceForm = () => {
             <button
               type="button"
               onClick={() => router.push("/admin/show")}
-              className="flex-1 px-4 py-3 bg-gray-600 text-lg text-white rounded-md hover:bg-gray-700 transition-colors"
+              disabled={loading}
+              className="flex-1 px-4 py-3 bg-gray-600 text-lg disabled:bg-gray-400 text-white rounded-md hover:bg-gray-700 transition-colors"
             >
-              Cancel
+              Back
+              {/* {message === "Ticket prices submitted successfully!" ? (
+                <span>Back</span>
+              ) : (
+                <span>Cancel</span>
+              )} */}
             </button>
           </div>
         </form>

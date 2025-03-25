@@ -1,13 +1,17 @@
 name: CI/CD Pipeline
 
 on:
+  push:
+    branches:
+      - main
   pull_request:
     branches:
       - main
 
+# Concurrency control remains the same for PRs but adjusted for production pushes
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -17,6 +21,7 @@ env:
 jobs:
   check-connections:
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' # Only run on PRs
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -31,7 +36,7 @@ jobs:
         run: npm ci
 
       - name: Cache Vercel CLI
-        uses: actions/cache@v3
+        uses: actions/cache@v4 # Updated to latest version
         id: cache-vercel
         with:
           path: ~/.npm-global
@@ -41,53 +46,44 @@ jobs:
 
       - name: Install Vercel CLI
         if: steps.cache-vercel.outputs.cache-hit != 'true'
-        run: |
-          npm install --global vercel@latest
-          echo "Vercel CLI installed to: $(which vercel)"
+        run: npm install --global vercel@latest
         env:
           NPM_CONFIG_PREFIX: ~/.npm-global
 
       - name: Ensure Vercel CLI is in PATH
         run: echo "$HOME/.npm-global/bin" >> $GITHUB_PATH
 
-      - name: Verify Vercel CLI
-        run: vercel --version
-
       - name: Pull Vercel Environment
         run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Cache Prisma Client
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         id: cache-prisma
         with:
           path: node_modules/.prisma
           key: ${{ runner.os }}-prisma-${{ hashFiles('prisma/schema.prisma') }}
           restore-keys: |
             ${{ runner.os }}-prisma-
-
-      - name: Verify Prisma CLI
-        run: npx prisma --version
 
       - name: Test PostgreSQL Connection
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: |
-          npx prisma db pull --force
-          echo "PostgreSQL connection successful"
+        run: npx prisma db pull --force
 
       - name: Install Redis CLI
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y redis-tools
+        run: sudo apt-get update && sudo apt-get install -y redis-tools
 
       - name: Test Redis Connection
-        run: |
-          echo "Testing Redis connection..."
-          redis-cli -h ${{ secrets.REDIS_HOST }} -p ${{ secrets.REDIS_PORT }} -a ${{ secrets.REDIS_PASSWORD }} ping
+        env:
+          REDIS_HOST: ${{ secrets.REDIS_HOST }}
+          REDIS_PORT: ${{ secrets.REDIS_PORT }}
+          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+        run: redis-cli -h $REDIS_HOST -p $REDIS_PORT -a $REDIS_PASSWORD ping
 
-  deploy:
+  deploy-preview:
     needs: check-connections
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -102,7 +98,7 @@ jobs:
         run: npm ci
 
       - name: Cache Vercel CLI
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         id: cache-vercel
         with:
           path: ~/.npm-global
@@ -112,32 +108,24 @@ jobs:
 
       - name: Install Vercel CLI
         if: steps.cache-vercel.outputs.cache-hit != 'true'
-        run: |
-          npm install --global vercel@latest
-          echo "Vercel CLI installed to: $(which vercel)"
+        run: npm install --global vercel@latest
         env:
           NPM_CONFIG_PREFIX: ~/.npm-global
 
       - name: Ensure Vercel CLI is in PATH
         run: echo "$HOME/.npm-global/bin" >> $GITHUB_PATH
 
-      - name: Verify Vercel CLI
-        run: vercel --version
-
       - name: Pull Vercel Environment
         run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Cache Prisma Client
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         id: cache-prisma
         with:
           path: node_modules/.prisma
           key: ${{ runner.os }}-prisma-${{ hashFiles('prisma/schema.prisma') }}
           restore-keys: |
             ${{ runner.os }}-prisma-
-
-      - name: Verify Prisma CLI
-        run: npx prisma --version
 
       - name: Generate Prisma Client
         if: steps.cache-prisma.outputs.cache-hit != 'true'
@@ -146,63 +134,283 @@ jobs:
       - name: Build Project
         run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
 
-      - name: Deploy to Vercel
+      - name: Deploy Preview to Vercel
         run: vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
 
+  deploy-production:
+    needs: check-connections
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Cache Vercel CLI
+        uses: actions/cache@v4
+        id: cache-vercel
+        with:
+          path: ~/.npm-global
+          key: ${{ runner.os }}-vercel-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-vercel-
+
+      - name: Install Vercel CLI
+        if: steps.cache-vercel.outputs.cache-hit != 'true'
+        run: npm install --global vercel@latest
+        env:
+          NPM_CONFIG_PREFIX: ~/.npm-global
+
+      - name: Ensure Vercel CLI is in PATH
+        run: echo "$HOME/.npm-global/bin" >> $GITHUB_PATH
+
+      - name: Pull Vercel Environment
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Cache Prisma Client
+        uses: actions/cache@v4
+        id: cache-prisma
+        with:
+          path: node_modules/.prisma
+          key: ${{ runner.os }}-prisma-${{ hashFiles('prisma/schema.prisma') }}
+          restore-keys: |
+            ${{ runner.os }}-prisma-
+
+      - name: Generate Prisma Client
+        if: steps.cache-prisma.outputs.cache-hit != 'true'
+        run: npx prisma generate
+
+      - name: Run Prisma Migrations
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npx prisma migrate deploy
+
+      - name: Build Project
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy to Vercel Production
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+
   # :::::::::::::::::::::::::::::::::      :::::::::::::::::::::::::::::::::::::::::::
-  # :::::::::::::::::::::::::::::::::   vercel deploy  :::::::::::::::::::::::::::::::::::::::::::
+  # :::::::::::::::::::::::::::::::::   vercel deploy phase 1 :::::::::::::::::::::::::::::::::::::::::::
   # :::::::::::::::::::::::::::::::::      :::::::::::::::::::::::::::::::::::::::::::
-  # deploy-to-vercel:
-  #   needs: build-and-test
-  #   runs-on: ubuntu-latest
-  #   if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v4
+# name: CI/CD Pipeline
 
-  #     - name: Setup Node.js
-  #       uses: actions/setup-node@v4
-  #       with:
-  #         node-version: ${{ env.NODE_VERSION }}
+# on:
+#   pull_request:
+#     branches:
+#       - main
+# # Concurrency control to prevent overlapping runs
+# # only one workflow runs at a time for a given pull request. This cancels or queues subsequent runs until the current one finishes.
+# # With cancel-in-progress: true, older runs are canceled when a new commit triggers a run, ensuring only the latest commit is processed.
+# concurrency:
+#   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+#   cancel-in-progress: true
 
-  #     - name: Install Vercel CLI
-  #       run: npm install --global vercel@latest
+# env:
+#   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+#   VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+#   NODE_VERSION: 20
 
-  #     - name: Debug Vercel Environment Variables
-  #       run: |
-  #         echo "VERCEL_ORG_ID: $VERCEL_ORG_ID"
-  #         echo "VERCEL_PROJECT_ID: $VERCEL_PROJECT_ID"
-  #         echo "VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}" | sed 's/./*/g' # Mask token for safety
+# jobs:
+#   check-connections:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Checkout repository
+#         uses: actions/checkout@v4
 
-  #     - name: Add Environment Variables to Vercel
-  #       run: |
-  #         vercel env add DATABASE_URL ${{ secrets.DATABASE_URL }} --token=${{ secrets.VERCEL_TOKEN }}
-  #         vercel env add REDIS_HOST ${{ secrets.REDIS_HOST }} --token=${{ secrets.VERCEL_TOKEN }}
-  #         vercel env add REDIS_PORT ${{ secrets.REDIS_PORT }} --token=${{ secrets.VERCEL_TOKEN }}
-  #         vercel env add REDIS_PASSWORD ${{ secrets.REDIS_PASSWORD }} --token=${{ secrets.VERCEL_TOKEN }}
+#       - name: Setup Node.js
+#         uses: actions/setup-node@v4
+#         with:
+#           node-version: ${{ env.NODE_VERSION }}
+#           cache: "npm"
 
-  #     - name: Pull Vercel Environment
-  #       run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+#       - name: Install dependencies
+#         run: npm ci
 
-  #     - name: Generate Prisma Client for Vercel Build
-  #       run: npx prisma generate
+#       # (cache miss occurred, but installation failed or didn’t persist,
+#       # because ~/.npm-global/bin isn’t automatically added to the PATH in GitHub Actions runners.
 
-  #     - name: Build Project
-  #       run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+#       - name: Cache Vercel CLI
+#         uses: actions/cache@v3
+#         id: cache-vercel
+#         with:
+#           path: ~/.npm-global
+#           key: ${{ runner.os }}-vercel-${{ hashFiles('package-lock.json') }}
+#           restore-keys: |
+#             ${{ runner.os }}-vercel-
 
-  #     - name: Deploy to Vercel
-  #       run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+#       - name: Install Vercel CLI
+#         if: steps.cache-vercel.outputs.cache-hit != 'true'
+#         run: |
+#           npm install --global vercel@latest
+#           echo "Vercel CLI installed to: $(which vercel)"
+#         env:
+#           NPM_CONFIG_PREFIX: ~/.npm-global
 
-  # push the Docker image to a registry
-  # - name: Login to Docker Hub
-  #   run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+#       - name: Ensure Vercel CLI is in PATH
+#         run: echo "$HOME/.npm-global/bin" >> $GITHUB_PATH
 
-  # - name: Push Docker Image
-  #   run: docker push bookmyshow-app:latest
+#       - name: Verify Vercel CLI
+#         run: vercel --version
 
-  # :::::::::::::::::::::::::::::::::      :::::::::::::::::::::::::::::::::::::::::::
-  # :::::::::::::::::::::::::::::::::   for local redis and postgres   :::::::::::::::::::::::::::::::::::::::::::
-  # :::::::::::::::::::::::::::::::::      :::::::::::::::::::::::::::::::::::::::::::
+#       - name: Pull Vercel Environment
+#         run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+
+#       - name: Cache Prisma Client
+#         uses: actions/cache@v3
+#         id: cache-prisma
+#         with:
+#           path: node_modules/.prisma
+#           key: ${{ runner.os }}-prisma-${{ hashFiles('prisma/schema.prisma') }}
+#           restore-keys: |
+#             ${{ runner.os }}-prisma-
+
+#       - name: Verify Prisma CLI
+#         run: npx prisma --version
+
+#       - name: Test PostgreSQL Connection
+#         env:
+#           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+#         run: |
+#           npx prisma db pull --force
+#           echo "PostgreSQL connection successful"
+
+#       - name: Install Redis CLI
+#         run: |
+#           sudo apt-get update && sudo apt-get install -y redis-tools
+
+#       - name: Test Redis Connection
+#         run: |
+#           echo "Testing Redis connection..."
+#           redis-cli -h ${{ secrets.REDIS_HOST }} -p ${{ secrets.REDIS_PORT }} -a ${{ secrets.REDIS_PASSWORD }} ping
+
+#   deploy:
+#     needs: check-connections
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Checkout repository
+#         uses: actions/checkout@v4
+
+#       - name: Setup Node.js
+#         uses: actions/setup-node@v4
+#         with:
+#           node-version: ${{ env.NODE_VERSION }}
+#           cache: "npm"
+
+#       - name: Install dependencies
+#         run: npm ci
+
+#       - name: Cache Vercel CLI
+#         uses: actions/cache@v3
+#         id: cache-vercel
+#         with:
+#           path: ~/.npm-global
+#           key: ${{ runner.os }}-vercel-${{ hashFiles('package-lock.json') }}
+#           restore-keys: |
+#             ${{ runner.os }}-vercel-
+
+#       - name: Install Vercel CLI
+#         if: steps.cache-vercel.outputs.cache-hit != 'true'
+#         run: |
+#           npm install --global vercel@latest
+#           echo "Vercel CLI installed to: $(which vercel)"
+#         env:
+#           NPM_CONFIG_PREFIX: ~/.npm-global
+
+#       - name: Ensure Vercel CLI is in PATH
+#         run: echo "$HOME/.npm-global/bin" >> $GITHUB_PATH
+
+#       - name: Verify Vercel CLI
+#         run: vercel --version
+
+#       - name: Pull Vercel Environment
+#         run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+
+#       - name: Cache Prisma Client
+#         uses: actions/cache@v3
+#         id: cache-prisma
+#         with:
+#           path: node_modules/.prisma
+#           key: ${{ runner.os }}-prisma-${{ hashFiles('prisma/schema.prisma') }}
+#           restore-keys: |
+#             ${{ runner.os }}-prisma-
+
+#       - name: Verify Prisma CLI
+#         run: npx prisma --version
+
+#       - name: Generate Prisma Client
+#         if: steps.cache-prisma.outputs.cache-hit != 'true'
+#         run: npx prisma generate
+
+#       - name: Build Project
+#         run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+
+#       - name: Deploy to Vercel
+#         run: vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
+
+# :::::::::::::::::::::::::::::::::      :::::::::::::::::::::::::::::::::::::::::::
+# :::::::::::::::::::::::::::::::::   vercel deploy  :::::::::::::::::::::::::::::::::::::::::::
+# :::::::::::::::::::::::::::::::::      :::::::::::::::::::::::::::::::::::::::::::
+# deploy-to-vercel:
+#   needs: build-and-test
+#   runs-on: ubuntu-latest
+#   if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+#   steps:
+#     - name: Checkout code
+#       uses: actions/checkout@v4
+
+#     - name: Setup Node.js
+#       uses: actions/setup-node@v4
+#       with:
+#         node-version: ${{ env.NODE_VERSION }}
+
+#     - name: Install Vercel CLI
+#       run: npm install --global vercel@latest
+
+#     - name: Debug Vercel Environment Variables
+#       run: |
+#         echo "VERCEL_ORG_ID: $VERCEL_ORG_ID"
+#         echo "VERCEL_PROJECT_ID: $VERCEL_PROJECT_ID"
+#         echo "VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}" | sed 's/./*/g' # Mask token for safety
+
+#     - name: Add Environment Variables to Vercel
+#       run: |
+#         vercel env add DATABASE_URL ${{ secrets.DATABASE_URL }} --token=${{ secrets.VERCEL_TOKEN }}
+#         vercel env add REDIS_HOST ${{ secrets.REDIS_HOST }} --token=${{ secrets.VERCEL_TOKEN }}
+#         vercel env add REDIS_PORT ${{ secrets.REDIS_PORT }} --token=${{ secrets.VERCEL_TOKEN }}
+#         vercel env add REDIS_PASSWORD ${{ secrets.REDIS_PASSWORD }} --token=${{ secrets.VERCEL_TOKEN }}
+
+#     - name: Pull Vercel Environment
+#       run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+#     - name: Generate Prisma Client for Vercel Build
+#       run: npx prisma generate
+
+#     - name: Build Project
+#       run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+#     - name: Deploy to Vercel
+#       run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+# push the Docker image to a registry
+# - name: Login to Docker Hub
+#   run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+# - name: Push Docker Image
+#   run: docker push bookmyshow-app:latest
+
+# :::::::::::::::::::::::::::::::::      :::::::::::::::::::::::::::::::::::::::::::
+# :::::::::::::::::::::::::::::::::   for local redis and postgres   :::::::::::::::::::::::::::::::::::::::::::
+# :::::::::::::::::::::::::::::::::      :::::::::::::::::::::::::::::::::::::::::::
 # name: BookmyShow Pipeline
 
 # # pipeline runs after merging a PR or directly pushing to main. pull_request:, push:

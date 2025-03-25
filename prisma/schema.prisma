@@ -17,6 +17,14 @@ enum BookingStatus {
   PENDING
   CONFIRMED
   CANCELED
+  EXPIRED
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELED
 }
 
 enum SeatType {
@@ -30,22 +38,13 @@ enum PaymentMode {
   UPI
 }
 
-enum PaymentStatus {
-  UNPAID
-  PENDING
-  COMPLETED
-  FAILED
-  DECLINED
-  CANCELED
-  REFUNDED
-}
 
 // User Model
 model User {
   id        String  @id @default(uuid())
   name      String
-  email     String  @unique @db.VarChar(200)
-  phone     String? @unique @db.VarChar(10)
+  email     String  @unique @db.VarChar(150) @index
+  phone     String? @unique @db.VarChar(15)
   password  String?  @db.VarChar(150)
   role      Role    @default(CUSTOMER)
   bookings  Booking[] 
@@ -135,7 +134,7 @@ model BookingSeat {
   id         String @id @default(uuid())
   bookingId  String
   booking    Booking @relation(fields: [bookingId], references: [id])
-  showSeatId String
+  showSeatId String @unique
   showSeat   ShowSeat @relation(fields: [showSeatId], references: [id])
 }
 
@@ -152,18 +151,19 @@ model Booking {
   ticket      MailTicket?
 }
 
+// Payment Model
 
-
-// Payment Model (For Booking Transactions)
 model Payment {
-  id           String @id @default(uuid())
-  amount       Float
-  mode         PaymentMode
-  createdOn    DateTime @default(now())
-  status       PaymentStatus
-  transactionId String?
-  bookingId    String @unique
-  booking      Booking @relation(fields: [bookingId], references: [id])
+  id              String @id @default(uuid())
+  amount          Float
+  mode            PaymentMode
+  createdOn       DateTime @default(now())
+  status          PaymentStatus
+  transactionId   String?
+  bookingId       String @unique
+  booking         Booking @relation(fields: [bookingId], references: [id])
+  clientSecret    String? 
+  paymentIntentId String? 
 }
 
 // Notification Model (For User Messages)

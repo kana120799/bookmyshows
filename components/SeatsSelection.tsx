@@ -94,6 +94,7 @@ const SeatsSelection = ({
   if (loading) {
     return <Loader />;
   }
+
   return (
     <div className="min-h-screen text-white py-12 px-4 bg-gray-100">
       <div
@@ -131,31 +132,35 @@ const SeatsSelection = ({
 
         {/* Seat Grid */}
         <div className="grid gap-6 justify-center">
-          {Object.entries(seatsByRow)?.map(([row, rowSeats]) => (
-            <div
-              key={row}
-              className="flex items-center gap-4 group transition-all duration-300 "
-            >
-              <span className="w-10 h-10 flex items-center justify-center bg-gray-800 rounded-full font-bold group-hover:bg-gray-700 transition-colors">
-                {row}
-              </span>
-              <div className="flex gap-3">
-                {rowSeats
-                  .sort((a, b) => a.column.localeCompare(b.column))
-                  ?.map((seat) => (
-                    <button
-                      key={seat.id}
-                      onClick={() => handleSeatClick(seat)}
-                      disabled={seat.isReserved || seat.status !== "AVAILABLE"}
-                      className={getSeatStyles(seat)}
-                      title={`Row ${seat.row} Seat ${seat.column} - $${seat.price} (${seat.type})`}
-                    >
-                      {seat.column}
-                    </button>
-                  ))}
+          {Object.entries(seatsByRow)
+            .sort(([rowA], [rowB]) => rowA.localeCompare(rowB)) // Sort rows alphabetically
+            ?.map(([row, rowSeats]) => (
+              <div
+                key={row}
+                className="flex items-center gap-4 group transition-all duration-300 "
+              >
+                <span className="w-10 h-10 flex items-center justify-center bg-gray-800 rounded-full font-bold group-hover:bg-gray-700 transition-colors">
+                  {row}
+                </span>
+                <div className="flex gap-3">
+                  {rowSeats
+                    .sort((a, b) => a.column.localeCompare(b.column))
+                    ?.map((seat) => (
+                      <button
+                        key={seat.id}
+                        onClick={() => handleSeatClick(seat)}
+                        disabled={
+                          seat.isReserved || seat.status !== "AVAILABLE"
+                        }
+                        className={getSeatStyles(seat)}
+                        title={`Row ${seat.row} Seat ${seat.column} - $${seat.price} (${seat.type})`}
+                      >
+                        {seat.column}
+                      </button>
+                    ))}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
         </div>
 
         <div className="mt-12 flex flex-wrap justify-center gap-6 bg-gray-200 p-4 rounded-xl shadow-lg">
