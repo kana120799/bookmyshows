@@ -43,13 +43,14 @@ enum PaymentMode {
 model User {
   id        String  @id @default(uuid())
   name      String
-  email     String  @unique @db.VarChar(150) @index
+  email     String  @unique @db.VarChar(150) 
   phone     String? @unique @db.VarChar(15)
   password  String?  @db.VarChar(150)
   role      Role    @default(CUSTOMER)
   bookings  Booking[] 
   notifications Notification[]
   createdAt DateTime @default(now())
+  @@index([email])
 }
 
 // Address Model
