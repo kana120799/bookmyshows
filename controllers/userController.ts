@@ -13,7 +13,10 @@ export async function getUsers() {
 
 export async function getUserBookings(userId: string) {
   const bookings = await prisma.booking.findMany({
-    where: { userId },
+    where: {
+      userId,
+      status: { in: ["CONFIRMED", "CANCELED"] },
+    },
     include: {
       show: {
         include: {

@@ -29,7 +29,7 @@ const registerSchema = z.object({
 interface LoginProps {
   toggleCredential: boolean;
   isLoading: boolean;
-  setIsLoginVisible: (value: boolean) => void;
+  // setIsLoginVisible: (value: boolean) => void;
   setToggleCredential: (value: boolean) => void;
   setIsLoading: (value: boolean) => void;
 }
@@ -37,7 +37,7 @@ interface LoginProps {
 function Register({
   toggleCredential,
   setToggleCredential,
-  setIsLoginVisible,
+  // setIsLoginVisible,
   isLoading,
   setIsLoading,
 }: LoginProps) {
@@ -76,13 +76,14 @@ function Register({
         body: JSON.stringify({
           email: data.email,
           password: data.password,
-          name: data.firstname,
+          name: data.firstname.concat(" ", data.lastname),
         }),
       });
 
       if (res.ok) {
         await loginWithCredentials(data.email, data.password);
-        setIsLoginVisible(false);
+        setIsLoading(false);
+        setToggleCredential(!toggleCredential);
       } else {
         const { error } = await res.json();
         alert(error);
@@ -114,14 +115,14 @@ function Register({
             </Label>
             <Input
               id="firstname"
-              placeholder="Tyler"
+              placeholder="Ankit"
               type="text"
               name="firstname"
               className="mt-1 block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 h-14 rounded-md shadow-sm text-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white"
               style={{ fontSize: "1.5rem" }}
             />
             {errors.firstname && (
-              <p className="mt-1 text-sm text-red-600">{errors.firstname}</p>
+              <p className="mt-1 text-lg text-red-600">{errors.firstname}</p>
             )}
           </div>
           <div className="flex-1">
@@ -133,14 +134,14 @@ function Register({
             </Label>
             <Input
               id="lastname"
-              placeholder="Durden"
+              placeholder="Sharma"
               type="text"
               name="lastname"
               className="mt-1 block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 h-14 rounded-md shadow-sm text-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white"
               style={{ fontSize: "1.5rem" }}
             />
             {errors.lastname && (
-              <p className="mt-1 text-sm text-red-600">{errors.lastname}</p>
+              <p className="mt-1 text-lg text-red-600">{errors.lastname}</p>
             )}
           </div>
         </div>
@@ -161,7 +162,7 @@ function Register({
             style={{ fontSize: "1.5rem" }}
           />
           {errors.email && (
-            <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+            <p className="mt-1 text-lg text-red-600">{errors.email}</p>
           )}
         </div>
 
@@ -181,7 +182,7 @@ function Register({
             style={{ fontSize: "1.5rem" }}
           />
           {errors.password && (
-            <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+            <p className="mt-1 text-lg text-red-600">{errors.password}</p>
           )}
         </div>
 
@@ -198,6 +199,7 @@ function Register({
           Already have an account?{" "}
           <button
             type="button"
+            disabled={isLoading}
             onClick={() => setToggleCredential(!toggleCredential)}
             className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
           >

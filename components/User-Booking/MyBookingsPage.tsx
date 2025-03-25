@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BookingTable } from "./BookingTable";
+import { MyBookingTable } from "./MyBookingTable";
 import axios from "axios";
 import { useSession } from "next-auth/react";
 import Loader from "../Loader";
@@ -28,5 +28,5 @@ export default function BookingsPage() {
   }, [session?.user.id]);
 
   if (loading) return <Loader />;
-  return <BookingTable bookings={bookings} />;
+  return <MyBookingTable bookings={bookings} />;
 }

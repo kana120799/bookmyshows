@@ -1,8 +1,8 @@
-import BookingsPage from "@/components/User-Booking/BookingsPage";
+import MyBookingsPage from "@/components/User-Booking/MyBookingsPage";
 import React from "react";
 
 function page() {
-  return <BookingsPage />;
+  return <MyBookingsPage />;
 }
 
 export default page;

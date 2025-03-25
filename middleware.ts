@@ -5,6 +5,10 @@ export async function middleware(request: NextRequest) {
   const session = await auth();
   const { pathname } = request.nextUrl;
 
+  if (pathname === "/payment-success") {
+    return NextResponse.next();
+  }
+
   if (!session) {
     if (pathname.startsWith("/admin")) {
       return NextResponse.redirect(new URL("/", request.url));
@@ -34,7 +38,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // If no rules are violated, allow the request
+  //  no rules are violated, allow the request
   return NextResponse.next();
 }
 

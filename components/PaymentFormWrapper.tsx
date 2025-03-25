@@ -1,5 +1,3 @@
-"use client";
-
 import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import PaymentForm from "./PaymentForm";
@@ -20,17 +18,17 @@ export default function PaymentFormWrapper({
   userId: string | undefined;
   bookingKey: string;
 }) {
-  //   function convertToSubcurrency(amount: number, factor = 100) {
-  //     return Math.round(amount * factor);
-  //   }
+  function convertToSubcurrency(amount: number, factor = 100) {
+    return Math.round(amount * factor);
+  }
   return (
     <main className="max-w-6xl mx-auto p-10 text-white text-center border m-10 rounded-md h-auto mt-24">
       <Elements
         stripe={stripePromise}
         options={{
           mode: "payment",
-          //   amount: convertToSubcurrency(amount),
-          amount: amount,
+          amount: convertToSubcurrency(amount),
+          // amount: amount,
           currency: "usd",
         }}
       >

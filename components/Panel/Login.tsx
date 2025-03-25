@@ -104,7 +104,7 @@ function Login({
             style={{ fontSize: "1.5rem" }}
           />
           {errors.email && (
-            <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+            <p className="mt-1 text-lg text-red-600">{errors.email}</p>
           )}
         </div>
 
@@ -124,12 +124,12 @@ function Login({
             style={{ fontSize: "1.5rem" }}
           />
           {errors.password && (
-            <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+            <p className="mt-1 text-lg text-red-600">{errors.password}</p>
           )}
         </div>
 
         {errors.general && (
-          <p className="text-sm text-red-600 text-center">{errors.general}</p>
+          <p className="text-lg text-red-600 text-center">{errors.general}</p>
         )}
 
         <button
@@ -146,6 +146,7 @@ function Login({
           Don&apos;t have an account?{" "}
           <button
             type="button"
+            disabled={isLoading}
             onClick={() => setToggleCredential(!toggleCredential)}
             className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
           >

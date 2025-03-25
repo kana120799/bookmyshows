@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { resetRedisClient } from "@/utils/redisClient";
 import { NextRequest, NextResponse } from "next/server";
 
 type AsyncHandler<T = { id: string }> = (
@@ -28,6 +29,7 @@ export const handleError = <T = { id: string }>(fn: AsyncHandler<T>) => {
       );
     } finally {
       await prisma.$disconnect();
+      await resetRedisClient();
     }
   };
 };

@@ -34,7 +34,7 @@ export default function Navbar() {
   const isExactCityPath = /^\/customer\/home\/[^/]+$/.test(pathname);
   const { data: session, status } = useSession();
   const { selectedCity } = useSelector((state: RootState) => state.city);
-
+  console.log("dsfiuu8", session);
   // const [isOpen, setIsOpen] = useState(false);
   const [toggleCredential, setToggleCredential] = useState(true);
   const [isLoginVisible, setIsLoginVisible] = useState(false);
@@ -85,7 +85,7 @@ export default function Navbar() {
                 <Register
                   toggleCredential={toggleCredential}
                   setToggleCredential={setToggleCredential}
-                  setIsLoginVisible={setIsLoginVisible}
+                  // setIsLoginVisible={setIsLoginVisible}
                   setIsLoading={setIsLoading}
                   isLoading={isLoading}
                 />
@@ -193,14 +193,14 @@ export default function Navbar() {
                     >
                       Sign out
                     </DropdownMenuItem>
-                    {/* <DropdownMenuItem
+                    <DropdownMenuItem
                       onClick={() => {
                         router.push("/customer/profile");
                       }}
                       className="cursor-pointer text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 text-xl"
                     >
                       Profile
-                    </DropdownMenuItem> */}
+                    </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => {
                         router.push("/customer/mybookings");

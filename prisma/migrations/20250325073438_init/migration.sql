@@ -2,16 +2,16 @@
 CREATE TYPE "Role" AS ENUM ('CUSTOMER', 'ADMIN');
 
 -- CreateEnum
-CREATE TYPE "BookingStatus" AS ENUM ('PENDING', 'CONFIRMED', 'CANCELED');
+CREATE TYPE "BookingStatus" AS ENUM ('PENDING', 'CONFIRMED', 'CANCELED', 'EXPIRED');
+
+-- CreateEnum
+CREATE TYPE "PaymentStatus" AS ENUM ('PENDING', 'COMPLETED', 'FAILED', 'CANCELED');
 
 -- CreateEnum
 CREATE TYPE "SeatType" AS ENUM ('REGULAR', 'PREMIUM', 'VIP');
 
 -- CreateEnum
 CREATE TYPE "PaymentMode" AS ENUM ('CARD', 'UPI');
-
--- CreateEnum
-CREATE TYPE "PaymentStatus" AS ENUM ('UNPAID', 'PENDING', 'COMPLETED', 'FAILED', 'DECLINED', 'CANCELED', 'REFUNDED');
 
 -- CreateTable
 CREATE TABLE "User" (
@@ -129,6 +129,8 @@ CREATE TABLE "Payment" (
     "status" "PaymentStatus" NOT NULL,
     "transactionId" TEXT,
     "bookingId" TEXT NOT NULL,
+    "clientSecret" TEXT,
+    "paymentIntentId" TEXT,
 
     CONSTRAINT "Payment_pkey" PRIMARY KEY ("id")
 );

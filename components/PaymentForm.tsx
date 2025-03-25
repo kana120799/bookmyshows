@@ -26,18 +26,6 @@ const PaymentForm = ({
   useEffect(() => {
     async function initiateCheckout() {
       try {
-        // Then initiate payment
-        // const checkoutResponse = await fetch("/api/stripe/checkout", {
-        //   method: "POST",
-        //   headers: {
-        //     "Content-Type": "application/json",
-        //   },
-        //   body: JSON.stringify({
-        //     amount,
-        //     userId,
-        //     bookingKey,
-        //   }),
-        // });
         const checkoutResponse = await axios.post("/api/stripe/checkout", {
           amount,
           userId,

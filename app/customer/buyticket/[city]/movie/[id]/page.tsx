@@ -77,7 +77,7 @@ export default function Page() {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (error) {
         // alert("Data not Valid");
-        alert(`Selected seats are no longer available`);
+        alert(`Certain seats are now unavailable.`);
         redirect("/");
       }
     }
@@ -125,3 +125,5 @@ export default function Page() {
     </>
   );
 }
+
+////////////////////////////////////////////  RATE

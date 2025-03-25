@@ -17,10 +17,13 @@ function ShowMovieList() {
   async function fetchMovies() {
     try {
       setLoading(true);
+      console.log("jkfhdfs", selectedCity, selectedCity !== "");
       if (selectedCity !== "") {
         const response = await axios.get(
           `/api/movie/movie-with-show?city=${selectedCity}`
         );
+        console.log("jkfhdfsAA", response.data.data);
+
         setList(response.data.data);
       }
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
