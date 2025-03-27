@@ -54,3 +54,8 @@ export const PUT = handleError(async (req: NextRequest) => {
     { status: 200 }
   );
 });
+
+// export const DELETE = handleError(async (req: NextRequest) => {
+//   const { id } = await req.json();
+
+// });
