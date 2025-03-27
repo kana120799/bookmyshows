@@ -1,7 +1,7 @@
 // import { dbQueryDuration, dbQueryErrors, userSeatLock } from "@/lib/metrics";
 import { prisma } from "@/lib/prisma";
-import { getRedisClient, resetRedisClient } from "@/utils/redisClient";
-const redis = getRedisClient();
+import { initializeRedisClient } from "@/utils/redisClient";
+
 import { NextResponse } from "next/server";
 // import { Resend } from "resend";
 import nodemailer from "nodemailer";
@@ -24,7 +24,9 @@ async function withRetry<T>(
           err.message.includes("ETIMEDOUT")) &&
         i < maxRetries - 1
       ) {
-        console.warn(`Retry ${i + 1}/${maxRetries} due to max clients error`);
+        console.warn(
+          `Retry ${i + 1}/${maxRetries} due to error: ${err.message}`
+        );
         await new Promise((resolve) => setTimeout(resolve, delayMs));
         continue;
       }
@@ -35,77 +37,47 @@ async function withRetry<T>(
 }
 
 // Release seats
-async function releaseSeats(seatIds: string[]): Promise<void> {
-  if (!seatIds || seatIds.length === 0) {
-    // logger.warn("No seat IDs provided for releaseSeats");
-    return; // Early return for empty input
-  }
+export async function releaseSeats(seatIds: string[]): Promise<void> {
+  if (!seatIds.length) return;
+  const redis = await initializeRedisClient();
 
-  // Ensure Redis is available (should be handled at app startup, but we log and throw here)
-  if (!redis) {
-    const errorMsg = "Redis client not initialized";
-    // logger.error(errorMsg);
-    throw new Error(errorMsg); // Critical failure, no point in proceeding
-  }
-
+  let dbUpdated = false;
   try {
-    // Step 1: Update seats in the database within a transaction
     await prisma.$transaction(async (tx) => {
       const updatedCount = await tx.showSeat.updateMany({
         where: { id: { in: seatIds } },
-        data: {
-          isReserved: false,
-          status: "AVAILABLE",
-        },
+        data: { isReserved: false, status: "AVAILABLE" },
       });
-
       if (updatedCount.count !== seatIds.length) {
         throw new Error("Mismatch in number of seats updated");
       }
+      dbUpdated = true;
     });
 
-    // Step 2: Remove Redis locks atomically
     const multi = redis.multi();
     seatIds.forEach((seatId) => multi.del(`seat:lock:${seatId}`));
     const execResult = await withRetry(() => multi.exec());
-
     if (!execResult || execResult.some(([err]) => err)) {
-      throw new Error("Failed to remove some or all Redis locks");
+      throw new Error("Failed to remove Redis locks");
     }
-
-    // logger.info(`Successfully released seats: ${seatIds.join(", ")}`);
   } catch (err) {
-    // Log the error with details and rethrow for the caller to handle
-    const errorMessage = err instanceof Error ? err.message : "Unknown error";
-    console.log("oue8uj", errorMessage);
-    // logger.error(`Failed to release seats ${seatIds.join(", ")}: ${errorMessage}`, {
-    //   error: err,
-    //   seatIds,
-    // });
-
-    // Attempt rollback if partial failure occurred (e.g., Redis failed but DB succeeded)
-    try {
-      await prisma.showSeat.updateMany({
-        where: { id: { in: seatIds } },
-        data: {
-          isReserved: true, // Revert to reserved if Redis rollback is needed
-          status: "RESERVED",
-        },
-      });
-      // logger.warn(`Rolled back seat status for ${seatIds.join(", ")} due to Redis failure`);
-    } catch (rollbackErr) {
-      console.log("oue8uj", rollbackErr);
-      // logger.error("Rollback failed after releaseSeats error", {
-      //   originalError: err,
-      //   rollbackError: rollbackErr,
-      // });
+    if (dbUpdated) {
+      await prisma.showSeat
+        .updateMany({
+          where: { id: { in: seatIds } },
+          data: { isReserved: true, status: "RESERVED" },
+        })
+        .catch((rollbackErr: unknown) => {
+          console.error("Rollback failed:", rollbackErr);
+          // TODO: Send to monitoring system (e.g., Sentry)
+        });
     }
-
-    throw err; // Rethrow the original error for upstream handling
+    throw err instanceof Error
+      ? err
+      : new Error("Unknown error in releaseSeats");
   }
 }
 
-// Use in lockBooking
 export async function lockBooking({
   selectedSeatIds,
   total,
@@ -116,71 +88,88 @@ export async function lockBooking({
   total: number;
   userId: string;
   showId: string;
-}) {
-  const lockTTL = 10 * 60;
+}): Promise<NextResponse> {
+  const lockTTL = 10 * 60; // 10 minutes in seconds
+  const redis = await initializeRedisClient();
 
   const show = await prisma.show.findUnique({
     where: { id: showId },
   });
-
   if (!show) {
     return NextResponse.json({ error: "Invalid show ID" }, { status: 404 });
   }
-  if (!redis) {
-    throw new Error("Redis client not initialized");
-  }
-  for (const seatId of selectedSeatIds) {
-    const lockKey = `seat:lock:${seatId}`;
 
-    const isLocked = await withRetry(() => redis.get(lockKey));
-    if (isLocked) {
-      return NextResponse.json(
-        { error: `Seat ${seatId} is already locked` },
-        { status: 409 }
-      );
-    }
-  }
+  try {
+    await prisma.$transaction(async (tx) => {
+      // Validate seats belong to the show and total matches
+      const seats = await prisma.showSeat.findMany({
+        where: {
+          id: { in: selectedSeatIds },
+          isReserved: false,
+          status: "AVAILABLE",
+        },
+        select: { price: true }, //Todo: not sure about this
+      });
+      if (seats.length !== selectedSeatIds.length) {
+        return NextResponse.json(
+          { error: "Invalid seat IDs for show" },
+          { status: 400 }
+        );
+      }
+      const calculatedTotal = seats.reduce((sum, seat) => sum + seat.price, 0);
+      if (calculatedTotal !== total) {
+        return NextResponse.json(
+          { error: "Total amount mismatch" },
+          { status: 400 }
+        );
+      }
 
-  const multi = redis.multi();
-  selectedSeatIds.forEach((seatId: string) => {
-    const lockKey = `seat:lock:${seatId}`;
-    multi.set(lockKey, userId, "EX", lockTTL, "NX");
-  });
+      // Reserve seats in DB
+      await tx.showSeat.updateMany({
+        where: { id: { in: selectedSeatIds } },
+        data: { isReserved: true, status: "RESERVED" },
+      });
 
-  const lockResults = await withRetry(() => multi.exec());
+      // Lock seats in Redis atomically
+      const multi = redis.multi();
+      selectedSeatIds.forEach((seatId) => {
+        const lockKey = `seat:lock:${seatId}`;
+        multi.set(lockKey, userId, "EX", lockTTL, "NX");
+      });
+      const lockResults = await withRetry(() => multi.exec());
 
-  if (!lockResults) {
-    await releaseSeats(selectedSeatIds);
+      if (
+        !lockResults ||
+        lockResults.some(([err, result]) => err || result === null)
+      ) {
+        throw new Error("Failed to lock seats in Redis");
+      }
+    });
+
+    // Store temporary booking data
+    const bookingKey = `booking:temp:${userId}`;
+    const bookingData = {
+      userId,
+      showId,
+      selectedSeatIds,
+      total,
+      createdAt: Date.now(),
+    };
+    await withRetry(() =>
+      redis.set(bookingKey, JSON.stringify(bookingData), "EX", lockTTL)
+    );
+
     return NextResponse.json(
-      { error: "Failed to acquire locks due to Redis error" },
+      { message: "Seats locked successfully", data: bookingKey },
+      { status: 200 }
+    );
+  } catch (err) {
+    await releaseSeats(selectedSeatIds); // Clean up on failure
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Failed to lock seats" },
       { status: 500 }
     );
   }
-
-  if (lockResults.some(([err, result]) => err || result === null)) {
-    await releaseSeats(selectedSeatIds);
-    return NextResponse.json(
-      { error: "Seats are already booked" },
-      { status: 409 }
-    );
-  }
-
-  const bookingKey = `booking:temp:${userId}`;
-  const bookingData = {
-    userId,
-    showId,
-    selectedSeatIds,
-    total,
-    createdAt: Date.now(),
-  };
-  await withRetry(() =>
-    redis.set(bookingKey, JSON.stringify(bookingData), "EX", lockTTL)
-  );
-
-  return NextResponse.json(
-    { message: "Seats locked successfully", data: bookingKey },
-    { status: 200 }
-  );
 }
 
 //  :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::      confirm booking   ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -201,80 +190,60 @@ async function sendBookingEmail({
   bookingId: string;
 }) {
   const seatDetails = seats
-    ?.map((seat) => `${seat.row}${seat.column}`)
+    .map((seat) => `${seat.row}${seat.column}`)
     .join(", ");
 
-  // const resend = new Resend(process.env.RESEND_API_KEY);
+  const requiredEnvVars = [
+    "EMAIL_HOST",
+    "EMAIL_PORT",
+    "EMAIL_USER",
+    "EMAIL_PASS",
+  ];
+  for (const envVar of requiredEnvVars) {
+    if (!process.env[envVar]) {
+      throw new Error(`Missing environment variable: ${envVar}`);
+    }
+  }
+
+  const transporter = nodemailer.createTransport({
+    host: process.env.EMAIL_HOST,
+    port: Number(process.env.EMAIL_PORT),
+    secure: false,
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+
+  const emailContent = `
+    Booking Confirmed!
+    Thank you for your booking. Here are your details:
+    - Movie: ${movieTitle}
+    - Cinema Hall: ${hallName}
+    - Seats: ${seatDetails}
+    - Total Amount: $${total}
+    - Booking ID: ${bookingId}
+    Enjoy your movie!
+  `;
 
   try {
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: Number(process.env.EMAIL_PORT),
-      secure: false, // true for port 465, false for other ports
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
     const data = await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: email,
       subject: `Booking Confirmation - ${bookingId}`,
-      text: ``,
+      text: emailContent, // Plain-text version
       html: `
-      <h2>Booking Confirmed!</h2>
-      <p>Thank you for your booking. Here are your details:</p>
-      <ul>
-        <li>Movie: ${movieTitle}</li>
-        <li>Cinema Hall: ${hallName}</li>
-        <li>Seats: ${seatDetails}</li>
-        <li>Total Amount: $${total}</li>
-        <li>Booking ID: ${bookingId}</li>
-      </ul>
-      <p>Enjoy your movie!</p>
-    `,
+        <h2>Booking Confirmed!</h2>
+        <p>${emailContent.replace(/\n/g, "<br>")}</p>
+      `,
     });
-
     console.log("Email sent successfully:", data);
   } catch (error) {
     console.error("Error sending email:", error);
+    throw new Error("Failed to send confirmation email");
   }
 }
 
-// verify seat availability
-async function verifySeatsAvailability(seatIds: string[]) {
-  const seats = await prisma.$transaction(async (tx) => {
-    const lockedSeats = await tx.showSeat.findMany({
-      where: {
-        id: { in: seatIds },
-      },
-      select: {
-        id: true,
-        isReserved: true,
-        status: true,
-        row: true,
-        column: true,
-      },
-    });
-
-    const check = lockedSeats.every(
-      (seat) => !seat.isReserved && seat.status === "AVAILABLE"
-    );
-    if (!check) {
-      throw new Error("Some seats are no longer available.");
-    }
-    return lockedSeats;
-  });
-
-  return {
-    seats,
-    check: seats.every(
-      (seat) => !seat.isReserved && seat.status === "AVAILABLE"
-    ),
-  };
-}
-// create booking
 async function createBooking({
   selectedSeatIds,
   userId,
@@ -287,49 +256,41 @@ async function createBooking({
   amount: number;
 }) {
   return await prisma.$transaction(async (tx) => {
-    try {
-      // Create the booking
-      const booking = await tx.booking.create({
-        data: {
-          userId,
-          showId,
-          status: "CONFIRMED",
-        },
-      });
+    const booking = await tx.booking.create({
+      data: { userId, showId, status: "PENDING" }, // Start as PENDING
+    });
 
-      // Link seats to booking
-      await tx.bookingSeat.createMany({
-        data: selectedSeatIds?.map((seatId) => ({
-          bookingId: booking.id,
-          showSeatId: seatId,
-        })),
-      });
+    await tx.bookingSeat.createMany({
+      data: selectedSeatIds.map((seatId) => ({
+        bookingId: booking.id,
+        showSeatId: seatId,
+      })),
+    });
 
-      // Update seat status
-      await tx.showSeat.updateMany({
-        where: { id: { in: selectedSeatIds } },
-        data: {
-          isReserved: true,
-          status: "RESERVED",
-        },
-      });
+    await tx.showSeat.updateMany({
+      where: { id: { in: selectedSeatIds } },
+      data: { isReserved: true, status: "RESERVED" },
+    });
 
-      // Create payment record
-      const payment = await tx.payment.create({
-        data: {
-          bookingId: booking.id,
-          amount,
-          mode: "CARD",
-          status: "COMPLETED",
-        },
-      });
+    const payment = await tx.payment.create({
+      data: {
+        bookingId: booking.id,
+        amount,
+        mode: "CARD",
+        status: "PENDING", // Wait for Stripe confirmation
+      },
+    });
 
-      return { booking, payment };
-    } catch (error) {
-      console.error("Error creating booking:", error);
-      throw new Error("Failed to create booking.");
-    }
+    return { booking, payment };
   });
+}
+
+interface BookingData {
+  userId: string;
+  showId: string;
+  selectedSeatIds: string[];
+  total: number;
+  createdAt: number;
 }
 
 export async function confirmBooking({
@@ -340,15 +301,11 @@ export async function confirmBooking({
   amount: number;
   userId: string;
   bookingKey: string;
-}) {
-  console.log("fsdjf883", amount, userId, bookingKey);
-  // Get booking data from Redis
-  if (!redis) {
-    throw new Error("Redis client not initialized");
-  }
-  const bookingDataStr = await redis.get(bookingKey);
-  console.log("fsdjf883AAAA", bookingDataStr);
+}): Promise<NextResponse> {
+  const redis = await initializeRedisClient();
+  if (!redis) throw new Error("Redis client not initialized");
 
+  const bookingDataStr = await redis.get(bookingKey);
   if (!bookingDataStr) {
     return NextResponse.json(
       { error: "Booking session expired or invalid" },
@@ -356,241 +313,179 @@ export async function confirmBooking({
     );
   }
 
-  const bookingData = JSON.parse(bookingDataStr);
+  const bookingData: BookingData = JSON.parse(bookingDataStr);
   const { selectedSeatIds, showId } = bookingData;
 
-  // Verify seats are still available
-  const seatsAvailable = await verifySeatsAvailability(selectedSeatIds);
-
-  if (!seatsAvailable.check) {
+  // Verify Redis locks (assumes lockBooking sets these)
+  const lockChecks = await Promise.all(
+    selectedSeatIds.map((seatId) =>
+      redis.get(`seat:lock:${seatId}`).then((lock) => lock === userId)
+    )
+  );
+  if (!lockChecks.every(Boolean)) {
     await releaseSeats(selectedSeatIds);
-    await redis.del(bookingKey);
     return NextResponse.json(
-      { error: "Selected seats are no longer available" },
+      { error: "Seat locks expired or taken by another user" },
       { status: 409 }
     );
   }
 
-  // Create booking in database
-  const { booking, payment } = await createBooking({
-    userId,
-    showId,
-    selectedSeatIds,
-    amount,
-  });
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {});
+  let paymentIntent: Stripe.PaymentIntent | undefined; // Initialize as undefined
 
-  // Fetch additional details for notification and email
-  const showDetails = await prisma.show.findUnique({
-    where: { id: showId },
-    include: {
-      movie: true,
-      cinemaHall: true,
-    },
-  });
+  try {
+    paymentIntent = await stripe.paymentIntents.create({
+      amount: Math.round(amount * 100),
+      currency: "usd",
+      description: `Booking for show ${showId}`,
+      metadata: { userId, showId, seatIds: selectedSeatIds.join(",") },
+      automatic_payment_methods: { enabled: true },
+    });
 
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-  });
-
-  if (!user || !showDetails) {
-    throw new Error("User or show details not found.");
-  }
-  // Create notification
-  await prisma.notification.create({
-    data: {
+    const { booking, payment } = await createBooking({
       userId,
-      content: `Your booking for ${showDetails?.movie.title} at ${
-        showDetails?.cinemaHall.name
-      } has been confirmed. Seats: ${seatsAvailable.seats
-        ?.map((s) => `${s.row}${s.column}`)
-        .join(", ")}`,
-    },
-  });
+      showId,
+      selectedSeatIds,
+      amount,
+    });
 
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+    await stripe.paymentIntents.update(paymentIntent.id, {
+      metadata: { bookingId: booking.id, paymentId: payment.id },
+    });
 
-  const paymentIntentPayload = {
-    amount: Math.round(amount * 100),
-    currency: "usd",
-    description: `Booking ${booking.id} for bookmyshow-clone`,
-    metadata: {
+    const [showDetails, user] = await Promise.all([
+      prisma.show.findUnique({
+        where: { id: showId },
+        include: { movie: true, cinemaHall: true },
+      }),
+      prisma.user.findUnique({ where: { id: userId } }),
+    ]);
+
+    if (!user || !showDetails) {
+      throw new Error("User or show details not found");
+    }
+
+    return NextResponse.json({
+      clientSecret: paymentIntent.client_secret,
       bookingId: booking.id,
       paymentId: payment.id,
-    },
-    shipping: {
-      name: "Random singh",
-      address: {
-        line1: "510 Townsend St",
-        postal_code: "98140",
-        city: "San Francisco",
-        state: "CA",
-        country: "US",
-      },
-    },
-    automatic_payment_methods: { enabled: true },
-  };
-  const paymentIntent = await stripe.paymentIntents.create(
-    paymentIntentPayload
-  );
-
-  console.log("fsdjf883HHHH", paymentIntent);
-
-  // Send confirmation email
-  await sendBookingEmail({
-    email: user!.email,
-    movieTitle: showDetails!.movie.title,
-    hallName: showDetails!.cinemaHall.name,
-    seats: seatsAvailable.seats,
-    total: amount,
-    bookingId: booking.id,
-  });
-
-  await redis.del(bookingKey);
-  await resetRedisClient();
-
-  return NextResponse.json({
-    clientSecret: paymentIntent.client_secret,
-    bookingId: booking.id,
-  });
+    });
+  } catch (error) {
+    // Only attempt to cancel paymentIntent if it was created
+    if (paymentIntent) {
+      await stripe.paymentIntents.cancel(paymentIntent.id).catch((err) => {
+        console.error("Failed to cancel PaymentIntent:", err);
+      });
+    }
+    await releaseSeats(selectedSeatIds);
+    await redis.del(bookingKey);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Checkout failed" },
+      { status: 500 }
+    );
+  }
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//  :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::      confirm booking   ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-//  handle payment completion
-// async function handlePaymentCompletion({
-//   bookingId,
-//   paymentId,
-//   success,
-// }: {
-//   bookingId: string;
-//   paymentId: string;
-//   success: boolean;
-// }) {
-//   return await prisma.$transaction(async (tx) => {
-//     try {
-//       const booking = await tx.booking.findUnique({
-//         where: { id: bookingId },
-//         include: { seats: { include: { showSeat: true } } },
-//       });
+export async function finalizeBooking({
+  paymentIntentId,
+  bookingId,
+}: {
+  paymentIntentId: string;
+  bookingId: string;
+}): Promise<NextResponse> {
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {});
+  const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
 
-//       if (!booking) {
-//         throw new Error("Booking not found");
-//       }
+  if (paymentIntent.status !== "succeeded") {
+    return NextResponse.json(
+      { error: "Payment not completed" },
+      { status: 400 }
+    );
+  }
 
-//       if (success) {
-//         // Update booking to CONFIRMED
-//         await tx.booking.update({
-//           where: { id: bookingId },
-//           data: { status: "CONFIRMED" },
-//         });
+  try {
+    const existingBooking = await prisma.booking.findUnique({
+      where: { id: bookingId },
+    });
+    if (existingBooking?.status === "CONFIRMED") {
+      return NextResponse.json({
+        message: "Booking already confirmed",
+        bookingId,
+      });
+    }
 
-//         // Update payment to COMPLETED
-//         await tx.payment.update({
-//           where: { id: paymentId },
-//           data: { status: "COMPLETED" },
-//         });
+    const updatedBooking = await prisma.$transaction(async (tx) => {
+      const booking = await tx.booking.update({
+        where: { id: bookingId },
+        data: { status: "CONFIRMED" },
+      });
 
-//         // Get additional details for email
-//         // const [showDetails, user] = await Promise.all([
-//         //   prisma.show.findUnique({
-//         //     where: { id: booking.showId },
-//         //     include: { movie: true, cinemaHall: true },
-//         //   }),
-//         //   prisma.user.findUnique({ where: { id: booking.userId } }),
-//         // ]);
+      await tx.payment.update({
+        where: { bookingId },
+        data: {
+          status: "COMPLETED",
+          transactionId: paymentIntent.id,
+          paymentIntentId: paymentIntent.id,
+        },
+      });
 
-//         // Send confirmation email
-//         // await sendBookingEmail({
-//         //   email: user!.email,
-//         //   movieTitle: showDetails!.movie.title,
-//         //   hallName: showDetails!.cinemaHall.name,
-//         //   seats: booking.seats.map((s) => s.showSeat),
-//         //   // Todo:
-//         //   // total: booking.payment.amount,
-//         //   total: 345,
-//         //   bookingId: booking.id,
-//         // });
+      return booking;
+    });
 
-//         // Clean up Redis
-//         await redis.del(`booking:timeout:${bookingId}`);
-//       } else {
-//         // Payment failed, cancel booking
-//         await tx.booking.update({
-//           where: { id: bookingId },
-//           data: { status: "CANCELED" },
-//         });
+    const [showDetails, user, bookingSeats] = await Promise.all([
+      prisma.show.findUnique({
+        where: { id: updatedBooking.showId },
+        include: { movie: true, cinemaHall: true },
+      }),
+      prisma.user.findUnique({ where: { id: updatedBooking.userId } }),
+      prisma.bookingSeat.findMany({
+        where: { bookingId },
+        include: { showSeat: { select: { row: true, column: true } } },
+      }),
+    ]);
 
-//         await tx.payment.update({
-//           where: { id: paymentId },
-//           data: { status: "FAILED" },
-//         });
+    const seats = bookingSeats.map((bs) => ({
+      row: bs.showSeat.row,
+      column: bs.showSeat.column,
+    }));
 
-//         // Release seats
-//         const seatIds = booking.seats.map((s) => s.showSeatId);
-//         await releaseSeats(seatIds);
-//       }
+    await Promise.all([
+      prisma.notification.create({
+        data: {
+          userId: updatedBooking.userId,
+          content: `Your booking for ${showDetails!.movie.title} at ${
+            showDetails!.cinemaHall.name
+          } has been confirmed. Seats: ${seats
+            .map((s) => `${s.row}${s.column}`)
+            .join(", ")}`,
+        },
+      }),
+      sendBookingEmail({
+        email: user!.email,
+        movieTitle: showDetails!.movie.title,
+        hallName: showDetails!.cinemaHall.name,
+        seats,
+        total: paymentIntent.amount / 100,
+        bookingId: updatedBooking.id,
+      }).catch((err) => {
+        console.error("Email sending failed:", err);
+        // TODO: Log to monitoring system and retry if critical
+      }),
+    ]);
 
-//       return { success: true };
-//     } catch (error) {
-//       console.error("Payment completion error:", error);
-//       throw error;
-//     }
-//   });
-// }
+    const redis = await initializeRedisClient();
+    const seatIds = bookingSeats.map((bs) => bs.showSeatId);
+    const multi = redis.multi();
+    seatIds.forEach((seatId) => multi.del(`seat:lock:${seatId}`));
+    await multi.exec();
 
-// Function to handle booking timeout/expiration
-// export async function handleBookingTimeout(bookingId: string) {
-//   const booking = await prisma.booking.findUnique({
-//     where: { id: bookingId },
-//     include: { seats: true },
-//   });
-
-//   if (booking && booking.status === "PENDING") {
-//     await prisma.$transaction(async (tx) => {
-//       // Update booking status to EXPIRED
-//       await tx.booking.update({
-//         where: { id: bookingId },
-//         data: { status: "EXPIRED" },
-//       });
-
-//       // Update payment status to CANCELED if exists
-//       await tx.payment.updateMany({
-//         where: { bookingId: bookingId },
-//         data: { status: "CANCELED" },
-//       });
-
-//       // Release seats
-//       const seatIds = booking.seats.map((s) => s.showSeatId);
-//       await releaseSeats(seatIds);
-
-//       // Clean up Redis
-//       await redis.del(`booking:timeout:${bookingId}`);
-//     });
-//   }
-// }
-
-// const data = await resend.emails.send({
-//   from: "Acme <onboarding@resend.dev>",
-//   to: [email],
-//   subject: `Booking Confirmation - ${bookingId}`,
-//   html: `
-//     <h2>Booking Confirmed!</h2>
-//     <p>Thank you for your booking. Here are your details:</p>
-//     <ul>
-//       <li>Movie: ${movieTitle}</li>
-//       <li>Cinema Hall: ${hallName}</li>
-//       <li>Seats: ${seatDetails}</li>
-//       <li>Total Amount: $${total}</li>
-//       <li>Booking ID: ${bookingId}</li>
-//     </ul>
-//     <p>Enjoy your movie!</p>
-//   `,
-// });
+    return NextResponse.json({ message: "Booking confirmed", bookingId });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Finalization failed" },
+      { status: 500 }
+    );
+  }
+}

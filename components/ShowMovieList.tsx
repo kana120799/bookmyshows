@@ -17,17 +17,21 @@ function ShowMovieList() {
   async function fetchMovies() {
     try {
       setLoading(true);
-      console.log("jkfhdfs", selectedCity, selectedCity !== "");
       if (selectedCity !== "") {
         const response = await axios.get(
           `/api/movie/movie-with-show?city=${selectedCity}`
         );
-        console.log("jkfhdfsAA", response.data.data);
-
-        setList(response.data.data);
+        if (response.status === 429) {
+          alert(
+            "Rate limit exceeded. Maximum 5 requests per hour allowed. Please try again later"
+          );
+        } else if (response.status === 200) {
+          setList(response.data.data);
+        }
       }
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
+      console.error("Error fetching movies:", error);
+      alert("Something went wrong. Please try again later.");
     } finally {
       setLoading(false);
     }

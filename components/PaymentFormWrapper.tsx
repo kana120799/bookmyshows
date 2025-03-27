@@ -1,26 +1,31 @@
-import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
+import { Elements } from "@stripe/react-stripe-js";
 import PaymentForm from "./PaymentForm";
 
-if (process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY === undefined) {
-  throw new Error("NEXT_PUBLIC_STRIPE_PUBLIC_KEY is not defined");
+const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+  ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
+  : null;
+
+if (!stripePromise) {
+  throw new Error("Stripe publishable key is not defined");
 }
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
-);
+
+interface PaymentFormWrapperProps {
+  amount: number;
+  userId: string | undefined;
+  bookingKey: string;
+}
+
+function convertToSubcurrency(amount: number, factor: number = 100): number {
+  if (amount <= 0) throw new Error("Amount must be positive");
+  return Math.round(amount * factor);
+}
 
 export default function PaymentFormWrapper({
   amount,
   userId,
   bookingKey,
-}: {
-  amount: number;
-  userId: string | undefined;
-  bookingKey: string;
-}) {
-  function convertToSubcurrency(amount: number, factor = 100) {
-    return Math.round(amount * factor);
-  }
+}: PaymentFormWrapperProps) {
   return (
     <main className="max-w-6xl mx-auto p-10 text-white text-center border m-10 rounded-md h-auto mt-24">
       <Elements
@@ -28,7 +33,6 @@ export default function PaymentFormWrapper({
         options={{
           mode: "payment",
           amount: convertToSubcurrency(amount),
-          // amount: amount,
           currency: "usd",
         }}
       >

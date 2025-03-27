@@ -43,6 +43,7 @@ interface Movie {
   language: string;
   title: string;
   genre: string[];
+  durationMins: number;
 }
 
 interface MovieShowtimesProps {
@@ -122,6 +123,14 @@ export default function CinemasByCity({ setShowId }: MovieShowtimesProps) {
       try {
         const response = await axios.get(
           `/api/admin/cinema/city/?city=${city}&movieId=${id}&date=${schedule[0].fullDate.toISOString()}`
+        );
+        console.log(
+          "sdjf8yfsd",
+          response.data.data.movie,
+          "==>>",
+          response.data.data.cinemas,
+          "==>>>",
+          response.data.data.shows
         );
         setMovie(response.data.data.movie);
         setCinemas(response.data.data.cinemas);
@@ -286,20 +295,35 @@ export default function CinemasByCity({ setShowId }: MovieShowtimesProps) {
                 Cancellation available
               </div>
               <div className="flex flex-wrap gap-3">
-                {shows?.map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => setShowId(item.id)}
-                    className={cn(
-                      "px-4 py-2 border rounded text-green-600 border-green-600 hover:bg-green-50 transition-colors"
-                    )}
-                  >
-                    {new Date(item.startTime).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </button>
-                ))}
+                {shows?.map((item) => {
+                  const currentTime = new Date();
+                  // Show start time
+                  const showStartTime = new Date(item.startTime);
+                  const timeDifference =
+                    showStartTime.getTime() - currentTime.getTime();
+                  // 15 minute buffer time before movie end
+                  const bufferTime = (movie.durationMins - 15) * 60 * 1000;
+                  const isShowAvailable = timeDifference > bufferTime;
+
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => isShowAvailable && setShowId(item.id)}
+                      disabled={!isShowAvailable}
+                      className={cn(
+                        "px-4 py-2 border rounded transition-colors",
+                        isShowAvailable
+                          ? "text-green-600 border-green-600 hover:bg-green-50"
+                          : "text-gray-600 border-gray-700 cursor-not-allowed opacity-50"
+                      )}
+                    >
+                      {new Date(item.startTime).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
