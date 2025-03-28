@@ -108,7 +108,7 @@ interface MovieDetailsProps {
   country?: string;
   Year?: number;
   selectedCity?: string;
-  session: {
+  session?: {
     user: {
       name: string;
       email: string;
@@ -280,8 +280,7 @@ function MovieDetails({
               <Button
                 className="bg-pink-600 hover:bg-pink-700 text-white px-8 text-lg h-12"
                 onClick={() => {
-                  console.log("u89378ufsd", session.user.email);
-                  if (session.user.email)
+                  if (session?.user.email)
                     redirect(
                       `/customer/buyticket/${selectedCity.toLowerCase()}/movie/${id}?view=slot`
                     );

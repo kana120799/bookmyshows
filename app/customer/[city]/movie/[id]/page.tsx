@@ -86,7 +86,11 @@ export default function Page() {
         country={movieData.country}
         Year={movieData.Year}
         selectedCity={selectedCity}
-        session={session}
+        session={
+          session as
+            | { user: { name: string; email: string; role: string } }
+            | undefined
+        }
       />
       {/* <MovieDetails
         id="1"
