@@ -5,8 +5,20 @@ import { FormEvent, useState } from "react";
 import { z } from "zod";
 
 const registerSchema = z.object({
-  firstname: z.string().min(1, "First name is required"),
-  lastname: z.string().min(1, "First name is required"),
+  firstname: z
+    .string()
+    .min(1, "First name is required")
+    .refine(
+      (value) => /^[A-Z][a-z]*$/.test(value),
+      "First name must start with an uppercase letter followed by lowercase letters"
+    ),
+  lastname: z
+    .string()
+    .min(1, "Last name is required")
+    .refine(
+      (value) => /^[A-Z][a-z]*$/.test(value),
+      "Last name must start with an uppercase letter followed by lowercase letters"
+    ),
   email: z
     .string()
     .min(1, "Email is required")

@@ -7,6 +7,7 @@ import { RootState } from "@/GlobalState/store";
 import { useSelector } from "react-redux";
 import Loader from "@/components/Loader";
 import axios from "axios";
+import { useSession } from "next-auth/react";
 
 interface MovieData {
   id: string;
@@ -33,6 +34,8 @@ export default function Page() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const { selectedCity } = useSelector((state: RootState) => state.city);
+  const { data: session } = useSession();
+
   useEffect(() => {
     const fetchMovieDetails = async () => {
       try {
@@ -83,6 +86,7 @@ export default function Page() {
         country={movieData.country}
         Year={movieData.Year}
         selectedCity={selectedCity}
+        session={session}
       />
       {/* <MovieDetails
         id="1"

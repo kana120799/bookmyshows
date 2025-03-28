@@ -7,6 +7,7 @@ declare module "next-auth" {
       name: string;
       email: string;
       role: string;
+      // notificationsEnabled: boolean;
     } & DefaultSession["user"];
   }
 
@@ -15,6 +16,7 @@ declare module "next-auth" {
     name: string;
     email: string;
     role: string;
+    // notificationsEnabled: boolean;
   }
 }
 
@@ -24,5 +26,6 @@ declare module "next-auth/jwt" {
     name: string;
     email: string;
     role: string;
+    // notificationsEnabled: boolean;
   }
 }

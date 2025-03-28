@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { handleError } from "@/middleware/errorHandler";
-import { releaseSeats } from "@/controllers/bookingController";
+import { releaseSeats } from "@/controllers/bookingControllercopy1";
 import { initializeRedisClient } from "@/utils/redisClient";
 
 export const POST = handleError(async (req: NextRequest) => {

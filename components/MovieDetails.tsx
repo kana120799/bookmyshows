@@ -108,6 +108,13 @@ interface MovieDetailsProps {
   country?: string;
   Year?: number;
   selectedCity?: string;
+  session: {
+    user: {
+      name: string;
+      email: string;
+      role: string;
+    };
+  };
 }
 
 function MovieDetails({
@@ -127,6 +134,7 @@ function MovieDetails({
   country = "United States",
   Year = 2023,
   selectedCity = "mumbai",
+  session,
 }: MovieDetailsProps) {
   // Format duration from minutes to hours and minutes
   const formatDuration = (mins: number) => {
@@ -272,9 +280,12 @@ function MovieDetails({
               <Button
                 className="bg-pink-600 hover:bg-pink-700 text-white px-8 text-lg h-12"
                 onClick={() => {
-                  redirect(
-                    `/customer/buyticket/${selectedCity.toLowerCase()}/movie/${id}?view=slot`
-                  );
+                  console.log("u89378ufsd", session.user.email);
+                  if (session.user.email)
+                    redirect(
+                      `/customer/buyticket/${selectedCity.toLowerCase()}/movie/${id}?view=slot`
+                    );
+                  else alert("Please Sign in...");
                 }}
               >
                 Book tickets

@@ -1,8 +1,12 @@
+"use client";
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { InfoIcon } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import axios from "axios";
+import { useRouter } from "next/navigation";
+import Loader from "./Loader";
 
 interface ShowSeat {
   id: string;
@@ -14,16 +18,23 @@ interface ShowSeat {
 interface SelectedSeatsPanelProps {
   selectedSeats: string[];
   seats: ShowSeat[];
+  tempBookId: string;
+  isload: boolean;
   setShowPayment: (value: boolean) => void;
   setTotalAmount: (value: number) => void;
+  setIsload: (value: boolean) => void;
 }
 
 const SelectedSeatsPanel = ({
   selectedSeats,
   seats,
+  tempBookId,
+  isload,
+  setIsload,
   setShowPayment,
   setTotalAmount,
 }: SelectedSeatsPanelProps) => {
+  const router = useRouter();
   // Calculate convenience fee (15% of ticket price)
   const totalPrice = seats?.reduce((sum, seat) => {
     return sum + (seat?.price || 0);
@@ -48,6 +59,28 @@ const SelectedSeatsPanel = ({
     return `${seatLabels.join(", ")} (${selectedSeats.length} Tickets)`;
   };
 
+  async function confirmPayment() {
+    try {
+      setIsload(true);
+      // Confirm booking after payment
+      const response = await axios.post("/api/fakepayment", {
+        tempBookId,
+        paymentDetails: {
+          /* payment data */
+        },
+      });
+      console.log("sdnfusdfy786f", response);
+      if (response.status === 200) {
+        router.push(
+          `${
+            window.location.origin
+          }/payment-success?amount=${finalAmount.toFixed(2)}`
+        );
+      }
+    } finally {
+    }
+  }
+  if (isload) return <Loader />;
   return (
     <Card className="w-full max-w-md mx-auto rounded-lg overflow-hidden shadow-md border border-gray-200 bg-white mt-24">
       <CardContent className="p-0">
@@ -132,8 +165,10 @@ const SelectedSeatsPanel = ({
             <Button
               className="w-full bg-green-600 hover:bg-green-700 text-white py-3 text-xl"
               onClick={() => {
-                setTotalAmount(finalAmount);
-                setShowPayment(true);
+                // setTotalAmount(finalAmount);
+                // setShowPayment(true);
+                console.log("sdnfuisdi", tempBookId);
+                if (tempBookId) confirmPayment();
               }}
             >
               Proceed to Payment

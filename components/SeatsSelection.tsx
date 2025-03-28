@@ -208,7 +208,6 @@ const SeatsSelection = ({
               <div className="flex justify-between text-lg font-bold">
                 <span>Total:</span>
                 <span>
-                  $
                   {selectedSeats.reduce((sum, seatId) => {
                     const seat = seats.find((s) => s.id === seatId);
                     return sum + (seat?.price || 0);

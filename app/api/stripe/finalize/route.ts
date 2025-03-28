@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { finalizeBooking } from "@/controllers/bookingController";
 import { handleError } from "@/middleware/errorHandler";
+import { handlePaymentSuccess } from "@/controllers/bookingControllercopy1";
 
 export const POST = handleError(async (req: NextRequest) => {
   const { paymentIntentId, bookingId } = await req.json();
@@ -12,5 +12,5 @@ export const POST = handleError(async (req: NextRequest) => {
     );
   }
 
-  return await finalizeBooking({ paymentIntentId, bookingId });
+  return await handlePaymentSuccess({ paymentIntentId, bookingId });
 });

@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { confirmBooking } from "@/controllers/bookingController";
+import { confirmBooking } from "@/controllers/bookingControllercopy1";
 import { handleError } from "@/middleware/errorHandler";
 
 export const POST = handleError(async (request: NextRequest) => {

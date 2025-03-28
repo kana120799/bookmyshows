@@ -8,9 +8,18 @@ import { useEffect, useState } from "react";
 import SeatsSelection from "@/components/SeatsSelection";
 import SelectedSeatsPanel from "@/components/SelectedSeatsPanel";
 import Loader from "@/components/Loader";
-import PaymentFormWrapper from "@/components/PaymentFormWrapper";
+// import PaymentFormWrapper from "@/components/PaymentFormWrapper";
 import axios from "axios";
 import { useSession } from "next-auth/react";
+
+// interface TempBookingData {
+//   tempBookingId: string;
+//   userId: string;
+//   showId: string;
+//   selectedSeatIds: string[];
+//   total: number;
+//   createdAt: number;
+// }
 
 export default function Page() {
   const searchParams = useSearchParams();
@@ -18,8 +27,10 @@ export default function Page() {
   const { selectedCity } = useSelector((state: RootState) => state.city);
   const [showId, setShowId] = useState<string>("");
   const [lockSeat, setLockSeat] = useState<boolean>(false);
-  const [isloading, setisloading] = useState<boolean>(false);
+  const [isloading, setIsloading] = useState<boolean>(false);
+  const [isload, setIsload] = useState<boolean>(false);
   const [showPayment, setShowPayment] = useState(false);
+  const [tempBookId, setBookId] = useState("");
   const [totalAmount, setTotalAmount] = useState(0);
 
   const [bookingKey, setBookingKey] = useState("");
@@ -51,6 +62,39 @@ export default function Page() {
     }
   }, [showId, view, selectedCity, id, session?.user?.id]);
 
+  // useEffect(() => {
+  //   async function LockSeat() {
+  //     try {
+  //       if (
+  //         bookingData.reduce((sum, seat) => {
+  //           return sum + (seat?.price || 0);
+  //         }, 0) > 0 &&
+  //         cinemaShowId
+  //       ) {
+  //         setIsloading(true);
+
+  //         const response = await axios.post(
+  //           `/api/booking?selectedSeatIds=${bookingData
+  //             ?.map((seat) => seat.id)
+  //             .join(",")}&total=${bookingData.reduce((sum, seat) => {
+  //             return sum + (seat?.price || 0);
+  //           }, 0)}&showId=${cinemaShowId}&userId=${session?.user?.id}`
+  //         );
+  //         if (response.status === 200) {
+  //           setBookingKey(response.data.data);
+  //           setIsloading(false);
+  //         }
+  //       }
+  //       // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  //     } catch (error) {
+  //       // alert("Data not Valid");
+  //       alert(`Certain seats are now unavailable.`);
+  //       redirect("/");
+  //     }
+  //   }
+  //   LockSeat();
+  // }, [lockSeat, bookingData, session?.user?.id, cinemaShowId]);
+
   useEffect(() => {
     async function LockSeat() {
       try {
@@ -60,23 +104,25 @@ export default function Page() {
           }, 0) > 0 &&
           cinemaShowId
         ) {
-          setisloading(true);
+          setIsloading(true);
 
-          const response = await axios.post(
+          const lockResponse = await axios.post(
             `/api/booking?selectedSeatIds=${bookingData
-              ?.map((seat) => seat.id)
-              .join(",")}&total=${bookingData.reduce((sum, seat) => {
-              return sum + (seat?.price || 0);
-            }, 0)}&showId=${cinemaShowId}&userId=${session?.user?.id}`
+              .map((seat) => seat.id)
+              .join(",")}&total=${bookingData.reduce(
+              (sum, seat) => sum + (seat?.price || 0),
+              0
+            )}&showId=${cinemaShowId}&userId=${session?.user?.id}`
           );
-          if (response.status === 200) {
-            setBookingKey(response.data.data);
-            setisloading(false);
-          }
+
+          const { tempBookingId } = lockResponse.data.data;
+
+          setBookId(tempBookingId);
+          setBookingKey(lockResponse.data.data);
+          setIsloading(false);
         }
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (error) {
-        // alert("Data not Valid");
+        console.log("dsfuidsy87", error);
         alert(`Certain seats are now unavailable.`);
         redirect("/");
       }
@@ -109,10 +155,13 @@ export default function Page() {
           setShowPayment={setShowPayment}
           selectedSeats={bookingData?.map((seat) => seat.id)}
           setTotalAmount={setTotalAmount}
+          tempBookId={tempBookId}
+          setIsload={setIsload}
+          isload={isload}
         />
       )}
 
-      {view === "seats" && lockSeat && showPayment && (
+      {/* {view === "seats" && lockSeat && showPayment && (
         <PaymentFormWrapper
           // amount={bookingData.reduce((sum, seat) => {
           //   return sum + (seat?.price || 0);
@@ -121,7 +170,7 @@ export default function Page() {
           bookingKey={bookingKey}
           userId={session?.user?.id}
         />
-      )}
+      )} */}
     </>
   );
 }
