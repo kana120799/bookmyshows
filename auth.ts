@@ -44,6 +44,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 name: user.name,
                 email: user.email,
                 role: "ADMIN",
+                // notificationsEnabled: user.notificationsEnabled,
               };
             }
           } else {
@@ -60,6 +61,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               id: user.id,
               name: user.name,
               email: user.email,
+              // notificationsEnabled: user.notificationsEnabled,
               role: "ADMIN",
             };
           }
@@ -85,6 +87,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           name: user.name,
           email: user.email,
           role: user.role,
+          // notificationsEnabled: user.notificationsEnabled,
         };
       },
     }),
@@ -97,14 +100,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.name = user.name;
+        token.email = user.email;
         token.role = user.role;
+        // token.notificationsEnabled = user.notificationsEnabled;
       }
       return token;
     },
     async session({ session, token }) {
       if (token) {
         session.user.id = token.id as string;
+        session.user.name = token.name as string;
+        session.user.email = token.email as string;
         session.user.role = token.role as string;
+        // session.user.notificationsEnabled = token.notificationsEnabled as boolean;
       }
       return session;
     },
@@ -124,7 +133,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           });
         }
         user.id = dbUser.id;
+        user.name = dbUser.name;
+        user.email = dbUser.email;
         user.role = dbUser.role;
+        // user.notificationsEnabled = dbUser.notificationsEnabled;
+
         return true;
       }
       return true;

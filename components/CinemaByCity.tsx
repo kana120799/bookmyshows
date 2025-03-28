@@ -124,14 +124,7 @@ export default function CinemasByCity({ setShowId }: MovieShowtimesProps) {
         const response = await axios.get(
           `/api/admin/cinema/city/?city=${city}&movieId=${id}&date=${schedule[0].fullDate.toISOString()}`
         );
-        console.log(
-          "sdjf8yfsd",
-          response.data.data.movie,
-          "==>>",
-          response.data.data.cinemas,
-          "==>>>",
-          response.data.data.shows
-        );
+
         setMovie(response.data.data.movie);
         setCinemas(response.data.data.cinemas);
         setShows(response.data.data.shows);
@@ -308,13 +301,14 @@ export default function CinemasByCity({ setShowId }: MovieShowtimesProps) {
                   return (
                     <button
                       key={item.id}
-                      onClick={() => isShowAvailable && setShowId(item.id)}
-                      disabled={!isShowAvailable}
+                      onClick={() => setShowId(item.id)}
+                      // disabled={!isShowAvailable}
                       className={cn(
                         "px-4 py-2 border rounded transition-colors",
                         isShowAvailable
                           ? "text-green-600 border-green-600 hover:bg-green-50"
-                          : "text-gray-600 border-gray-700 cursor-not-allowed opacity-50"
+                          : "text-green-600 border-green-600 hover:bg-green-50"
+                        // : "text-gray-600 border-gray-700 cursor-not-allowed opacity-50"
                       )}
                     >
                       {new Date(item.startTime).toLocaleTimeString([], {

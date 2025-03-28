@@ -47,6 +47,7 @@ model User {
   phone     String? @unique @db.VarChar(15)
   password  String?  @db.VarChar(150)
   role      Role    @default(CUSTOMER)
+  notificationsEnabled      Boolean @default(true) 
   bookings  Booking[] 
   notifications Notification[]
   createdAt DateTime @default(now())
@@ -114,7 +115,14 @@ model Show {
   bookings     Booking[]
 }
 
-
+model TempBooking {
+  id        String   @id @default(uuid())
+  userId    String
+  showId    String
+  seatIds   String[] // Array of seat IDs
+  total     Float
+  expiresAt DateTime
+}
 
 // ShowSeat (Seats available for booking in a Show)
 model ShowSeat {
@@ -128,6 +136,8 @@ model ShowSeat {
   column     String // e.g., "C1"
   type       SeatType // Optional, if not in layout
   bookingSeats BookingSeat[]
+
+
 }
 
 // BookingSeat (Maps ShowSeats to a Booking)

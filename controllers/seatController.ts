@@ -38,7 +38,7 @@ export async function initializeShowSeats({
 
   if (existingSeatsCount > 0) {
     return NextResponse.json(
-      { message: "Ticket prices already initialized" },
+      { message: "Ticket prices already initialized (Not Allow.)" },
       { status: 200 }
     );
   }

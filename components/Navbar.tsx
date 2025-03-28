@@ -34,7 +34,6 @@ export default function Navbar() {
   const isExactCityPath = /^\/customer\/home\/[^/]+$/.test(pathname);
   const { data: session, status } = useSession();
   const { selectedCity } = useSelector((state: RootState) => state.city);
-  console.log("dsfiuu8", session);
   // const [isOpen, setIsOpen] = useState(false);
   const [toggleCredential, setToggleCredential] = useState(true);
   const [isLoginVisible, setIsLoginVisible] = useState(false);
@@ -64,7 +63,6 @@ export default function Navbar() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
   };
-
   return (
     <>
       {/* Login/Register Overlay */}
@@ -188,16 +186,10 @@ export default function Navbar() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-48 mt-2">
                     <DropdownMenuItem
-                      onClick={handleSignOut}
-                      className="cursor-pointer text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 text-xl"
-                    >
-                      Sign out
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
                       onClick={() => {
                         router.push("/customer/profile");
                       }}
-                      className="cursor-pointer text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 text-xl"
+                      className="cursor-pointer text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 text-xl "
                     >
                       Profile
                     </DropdownMenuItem>
@@ -205,9 +197,15 @@ export default function Navbar() {
                       onClick={() => {
                         router.push("/customer/mybookings");
                       }}
-                      className="cursor-pointer text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 text-xl"
+                      className="cursor-pointer text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 text-xl mt-4 mb-4"
                     >
                       My Bookings
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={handleSignOut}
+                      className="cursor-pointer text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 text-xl"
+                    >
+                      Sign out
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

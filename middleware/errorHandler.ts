@@ -1,5 +1,4 @@
 import { prisma } from "@/lib/prisma";
-import { resetRedisClient } from "@/utils/redisClient";
 import { NextRequest, NextResponse } from "next/server";
 
 type AsyncHandler<T = { id: string }> = (
@@ -20,6 +19,7 @@ export const handleError = <T = { id: string }>(fn: AsyncHandler<T>) => {
         if (error.message === "User not found") {
           return NextResponse.json({ error: error.message }, { status: 404 });
         } else {
+          console.log("sdjfjds", error.message);
           return NextResponse.json({ error: "unknown error" }, { status: 404 });
         }
       }
@@ -29,7 +29,6 @@ export const handleError = <T = { id: string }>(fn: AsyncHandler<T>) => {
       );
     } finally {
       await prisma.$disconnect();
-      await resetRedisClient();
     }
   };
 };

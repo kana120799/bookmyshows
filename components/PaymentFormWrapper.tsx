@@ -1,3 +1,5 @@
+"use client";
+
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
 import PaymentForm from "./PaymentForm";
@@ -26,14 +28,25 @@ export default function PaymentFormWrapper({
   userId,
   bookingKey,
 }: PaymentFormWrapperProps) {
+  if (!userId) {
+    return (
+      <main className="max-w-6xl mx-auto p-10 text-white text-center border m-10 rounded-md h-auto mt-24">
+        <p className="text-red-500">User ID is required for payment</p>
+      </main>
+    );
+  }
+
   return (
-    <main className="max-w-6xl mx-auto p-10 text-white text-center border m-10 rounded-md h-auto mt-24">
+    <main className="max-w-6xl mx-auto p-10 text-white text-center border m-10 rounded-md h-auto mt-24 bg-gray-800">
       <Elements
         stripe={stripePromise}
         options={{
           mode: "payment",
           amount: convertToSubcurrency(amount),
           currency: "usd",
+          appearance: {
+            theme: "stripe",
+          },
         }}
       >
         <PaymentForm amount={amount} userId={userId} bookingKey={bookingKey} />

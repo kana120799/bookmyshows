@@ -1,6 +1,15 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { addressType } from "@/types/cinemaType";
+// import nodemailer from "nodemailer";
+
+// import { Kafka } from "kafkajs";
+
+// const kafka = new Kafka({
+//   clientId: "nextjs-app",
+//   brokers: ["192.168.29.249:9092"],
+// });
+// const producer = kafka.producer();
 
 // Add Cinema
 // export async function addCinema(data: {
@@ -223,136 +232,7 @@ export async function getCinemaById(cinemaId: string): Promise<NextResponse> {
   return NextResponse.json({ data: cinema }, { status: 200 });
 }
 
-// export async function getCinemasByCity(city: string): Promise<NextResponse> {
-//   const cinemas = await prisma.cinema.findMany({
-//     where: {
-//       address: {
-//         city: {
-//           equals: city,
-//           mode: "insensitive", // Case-insensitive search
-//         },
-//       },
-//     },
-//     include: {
-//       address: true,
-//       halls: true,
-//     },
-//   });
-
-//   if (!cinemas.length) {
-//     return NextResponse.json(
-//       { message: `No cinemas found in ${city}` },
-//       { status: 404 }
-//     );
-//   }
-
-//   return NextResponse.json({ data: cinemas }, { status: 200 });
-// }
-
-// export async function getCinemasByCityAndMovie(
-//   city: string,
-//   movieId: string,
-// ): Promise<NextResponse> {
-//   try {
-//     const shows = await prisma.show.findMany({
-//       where: {
-//         movieId: movieId,
-//       },
-//       include: {
-//         movie: {
-//           select: {
-//             language: true,
-//             title: true,
-//             genre: true,
-//             durationMins: true,
-//           },
-//         },
-//         cinemaHall: {
-//           include: {
-//             cinema: {
-//               include: {
-//                 address: {
-//                   where: {
-//                     city: {
-//                       equals: city,
-//                       mode: "insensitive",
-//                     },
-//                   },
-//                 },
-//               },
-//             },
-//           },
-//         },
-//       },
-//     });
-
-//     // If no shows found, return early
-//     if (!shows.length) {
-//       return NextResponse.json(
-//         { message: `No shows found for this movie in ${city}` },
-//         { status: 404 }
-//       );
-//     }
-
-//     // Extract unique cinema halls from shows
-//     const halls = shows
-//       ?.map((show) => show.cinemaHall)
-//       .filter(
-//         (hall, index, self) => index === self.findIndex((h) => h.id === hall.id)
-//       );
-
-//     // Extract unique cinemas from halls
-//     const cinemas = halls
-//       ?.map((hall) => hall.cinema)
-//       .filter(
-//         (cinema) =>
-//           cinema.address && // Ensure address exists
-//           cinema.address.city.toLowerCase() === city.toLowerCase()
-//       )
-//       .filter(
-//         (cinema, index, self) =>
-//           index === self.findIndex((c) => c.id === cinema.id)
-//       );
-
-//     if (!cinemas.length) {
-//       return NextResponse.json(
-//         { message: `No cinemas found in ${city} showing this movie` },
-//         { status: 404 }
-//       );
-//     }
-
-//     // Structure the response data
-//     const responseData = {
-//       cinemas: cinemas?.map((cinema) => ({
-//         id: cinema.id,
-//         name: cinema.name,
-//         address: cinema.address,
-//       })),
-//       shows: shows?.map((show) => ({
-//         id: show.id,
-//         movieId: show.movieId,
-//         cinemaHallId: show.cinemaHallId,
-//         startTime: show.startTime,
-//       })),
-//       halls: halls?.map((hall) => ({
-//         id: hall.id,
-//         name: hall.name,
-//         totalSeats: hall.totalSeats,
-//         cinemaId: hall.cinemaId,
-//       })),
-//       movie: shows[0]?.movie,
-//     };
-//     console.log("sdfjdf", shows, cinemas);
-
-//     return NextResponse.json({ data: responseData }, { status: 200 });
-//   } catch (error) {
-//     console.error("Error fetching cinemas by city and movie:", error);
-//     return NextResponse.json(
-//       { message: "Internal server error" },
-//       { status: 500 }
-//     );
-//   }
-// }
+// =========================================================================================================================================
 
 export async function getCinemasByCityAndMovie(
   city: string,
@@ -360,14 +240,22 @@ export async function getCinemasByCityAndMovie(
   todayDate: string
 ): Promise<NextResponse> {
   try {
+    // Set up date boundaries
     const today = new Date(todayDate);
-    const todayYear = today.getFullYear();
-    const todayMonth = today.getMonth();
-    const todayDay = today.getDate();
-    console.log("Parsed today:", todayYear, todayMonth, todayDay);
+    // Get shows for the movie regardless of date initially
     const shows = await prisma.show.findMany({
       where: {
         movieId: movieId,
+        cinemaHall: {
+          cinema: {
+            address: {
+              city: {
+                equals: city,
+                mode: "insensitive",
+              },
+            },
+          },
+        },
       },
       include: {
         movie: {
@@ -382,14 +270,7 @@ export async function getCinemasByCityAndMovie(
           include: {
             cinema: {
               include: {
-                address: {
-                  where: {
-                    city: {
-                      equals: city,
-                      mode: "insensitive",
-                    },
-                  },
-                },
+                address: true,
               },
             },
           },
@@ -397,7 +278,6 @@ export async function getCinemasByCityAndMovie(
       },
     });
 
-    // If no shows found, return early
     if (!shows.length) {
       return NextResponse.json(
         { message: `No shows found for this movie in ${city}` },
@@ -405,94 +285,79 @@ export async function getCinemasByCityAndMovie(
       );
     }
 
-    for (const show of shows) {
+    // Filter shows that need date adjustment (not matching today's date)
+    const showsToUpdate = shows.filter((show) => {
       const showDate = new Date(show.startTime);
-      const showYear = showDate.getUTCFullYear();
-      const showMonth = showDate.getUTCMonth();
-      const showDay = showDate.getUTCDate();
-
-      if (
-        showYear !== todayYear ||
-        showMonth !== todayMonth ||
-        showDay !== todayDay
-      ) {
-        // Update the show's startTime to today’s date,
-        const newStartTime = new Date(
-          todayYear,
-          todayMonth,
-          todayDay,
-          showDate.getUTCHours(),
-          showDate.getUTCMinutes(),
-          showDate.getUTCSeconds()
-        );
-
-        // Update the show
-        await prisma.show.update({
-          where: { id: show.id },
-          data: { startTime: newStartTime },
-        });
-
-        // Reset all ShowSeat entries for this show
-        await prisma.showSeat.updateMany({
-          where: { showId: show.id },
-          data: {
-            isReserved: false,
-            status: "AVAILABLE",
-          },
-        });
-
-        // Update the show object in memory to reflect the new startTime
-        show.startTime = newStartTime;
-      }
-    }
-
-    //  unique cinema halls from shows
-    const halls = shows
-      ?.map((show) => show.cinemaHall)
-      .filter(
-        (hall, index, self) => index === self.findIndex((h) => h.id === hall.id)
+      return (
+        showDate.getDate() !== today.getDate() ||
+        showDate.getMonth() !== today.getMonth() ||
+        showDate.getFullYear() !== today.getFullYear()
       );
+    });
 
-    //  unique cinemas from halls
-    const cinemas = halls
-      ?.map((hall) => hall.cinema)
-      .filter(
-        (cinema) =>
-          cinema.address &&
-          cinema.address.city.toLowerCase() === city.toLowerCase()
-      )
-      .filter(
-        (cinema, index, self) =>
-          index === self.findIndex((c) => c.id === cinema.id)
-      );
+    // Update shows and reset seats in a transaction
+    if (showsToUpdate.length > 0) {
+      await prisma.$transaction(
+        showsToUpdate.flatMap((show) => {
+          const showDate = new Date(show.startTime);
+          // Keep the original time but set to today's date
+          const newStartTime = new Date(
+            today.getFullYear(),
+            today.getMonth(),
+            today.getDate(),
+            showDate.getHours(),
+            showDate.getMinutes(),
+            showDate.getSeconds()
+          );
 
-    if (!cinemas.length) {
-      return NextResponse.json(
-        { message: `No cinemas found in ${city} showing this movie` },
-        { status: 404 }
+          return [
+            prisma.show.update({
+              where: { id: show.id },
+              data: { startTime: newStartTime },
+            }),
+            prisma.showSeat.updateMany({
+              where: { showId: show.id },
+              data: {
+                isReserved: false,
+                status: "AVAILABLE",
+              },
+            }),
+          ];
+        })
       );
     }
 
-    // Structure the response data
+    // Process the data for response
+    const hallsMap = new Map();
+    const cinemasMap = new Map();
+
+    shows.forEach((show) => {
+      const hall = show.cinemaHall;
+      const cinema = hall.cinema;
+
+      hallsMap.set(hall.id, hall);
+      cinemasMap.set(cinema.id, cinema);
+    });
+
     const responseData = {
-      cinemas: cinemas?.map((cinema) => ({
+      cinemas: Array.from(cinemasMap.values()).map((cinema) => ({
         id: cinema.id,
         name: cinema.name,
         address: cinema.address,
       })),
-      shows: shows?.map((show) => ({
+      shows: shows.map((show) => ({
         id: show.id,
         movieId: show.movieId,
         cinemaHallId: show.cinemaHallId,
         startTime: show.startTime,
       })),
-      halls: halls?.map((hall) => ({
+      halls: Array.from(hallsMap.values()).map((hall) => ({
         id: hall.id,
         name: hall.name,
         totalSeats: hall.totalSeats,
         cinemaId: hall.cinemaId,
       })),
-      movie: shows[0]?.movie,
+      movie: shows[0].movie,
     };
 
     return NextResponse.json({ data: responseData }, { status: 200 });
