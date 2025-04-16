@@ -7,7 +7,11 @@ import Loader from "./Loader";
 import { RootState } from "@/GlobalState/store";
 import { useDispatch, useSelector } from "react-redux";
 import { setMovieSearch } from "@/GlobalState/slices/searchMovieSlice";
-import axios from "axios";
+
+interface MovieResponse {
+  data: MovieType[];
+  hasMore: boolean;
+}
 
 function MovieList() {
   const dispatch = useDispatch();
@@ -18,7 +22,7 @@ function MovieList() {
   const [error, setError] = useState<string | null>(null);
   const [selectedGenre, setSelectedGenre] = useState<string>("");
   const [selectedLanguage, setSelectedLanguage] = useState<string>("");
-  const { selectedCity } = useSelector((state: RootState) => state.city);
+  const { selectedCity } = useSelector((state: RootState) => state?.city);
   const movieSearch = useSelector((state: RootState) => state.search);
 
   const [activeCategory, setActiveCategory] = useState("nowShowing");
@@ -40,17 +44,29 @@ function MovieList() {
     try {
       setLoading(true);
       setError(null);
-      const response = await axios.get("/api/movie", {
-        params: {
-          page: page,
-          limit: moviesPerPage,
-          genre: selectedGenre,
-          language: selectedLanguage,
-          search: movieSearch,
+
+      const queryParams = new URLSearchParams({
+        page: page.toString(),
+        limit: moviesPerPage.toString(),
+        genre: selectedGenre,
+        language: selectedLanguage,
+        search: movieSearch,
+      }).toString();
+
+      const response = await fetch(`/api/movie?${queryParams}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
         },
+        next: { revalidate: 10 * 60 * 60 },
       });
 
-      const { data, hasMore } = response.data;
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const responseData: MovieResponse = await response.json();
+      const { data, hasMore } = responseData;
       setList((prev) => (page === 1 ? data : [...prev, ...data]));
       setHasMore(hasMore);
     } catch (error) {
@@ -72,12 +88,10 @@ function MovieList() {
 
   useEffect(() => {
     const handleScroll = () => {
-      if (
-        window.innerHeight + document.documentElement.scrollTop >=
-          document.documentElement.offsetHeight - 50 &&
-        !loading &&
-        hasMore
-      ) {
+      const scrollPosition =
+        window.innerHeight + document.documentElement.scrollTop;
+      const triggerPoint = document.documentElement.offsetHeight - 100;
+      if (scrollPosition >= triggerPoint && !loading && hasMore) {
         setPage((prev) => prev + 1);
       }
     };
@@ -102,7 +116,7 @@ function MovieList() {
 
   return (
     <>
-      <div className=" bg-gray-50 dark:bg-gray-900">
+      <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">
         <div className="w-full pt-2 pl-16 md:pl-24 xl:pl-0 transition-all duration-300">
           <div className="mx-auto px-4 sm:px-6 lg:px-8 pb-16">
             <div className="flex items-center justify-between mb-8 border-b border-gray-200 dark:border-gray-700">
@@ -151,7 +165,7 @@ function MovieList() {
                     movieSearch === ""
                   }
                   onClick={resetFilters}
-                  className="bg-pink-600 text-white px-4 py-2 rounded-md text-sm hover:bg-pink-700 transition-colors disabled:bg-pink-300 "
+                  className="bg-pink-600 text-white px-4 py-2 rounded-md text-sm hover:bg-pink-700 transition-colors disabled:bg-pink-300"
                 >
                   Reset Filters
                 </button>
@@ -208,7 +222,7 @@ function MovieList() {
           </div>
         </div>
       )}
-      {!hasMore && list.length > 0 && (
+      {!hasMore && list?.length > 0 && (
         <div className="text-center py-4">No more movies to load</div>
       )}
     </>

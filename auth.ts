@@ -19,76 +19,81 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error("Missing email or password");
-        }
+        try {
+          if (!credentials?.email || !credentials?.password) {
+            throw new Error("Missing email or password");
+          }
 
-        const { email, password } = credentials as {
-          email: string;
-          password: string;
-        };
+          const { email, password } = credentials as {
+            email: string;
+            password: string;
+          };
 
-        // Admin login
-        if (
-          email === process.env.ADMIN_EMAIL &&
-          password === process.env.ADMIN_PASSWORD
-        ) {
-          let user = await prisma.user.findUnique({
-            where: { email },
-          });
+          // Admin login
+          if (
+            email === process.env.ADMIN_EMAIL &&
+            password === process.env.ADMIN_PASSWORD
+          ) {
+            let user = await prisma.user.findUnique({
+              where: { email },
+            });
 
-          if (user) {
-            if (await comparePassword(password, user.password as string)) {
+            if (user) {
+              if (await comparePassword(password, user.password as string)) {
+                return {
+                  id: user.id,
+                  name: user.name,
+                  email: user.email,
+                  role: "ADMIN",
+                  // notificationsEnabled: user.notificationsEnabled,
+                };
+              }
+            } else {
+              const hashedPw = await hashedPassword(password);
+              user = await prisma.user.create({
+                data: {
+                  name: "Admin",
+                  email,
+                  password: hashedPw,
+                  role: "ADMIN",
+                },
+              });
               return {
                 id: user.id,
                 name: user.name,
                 email: user.email,
-                role: "ADMIN",
                 // notificationsEnabled: user.notificationsEnabled,
+                role: "ADMIN",
               };
             }
-          } else {
-            const hashedPw = await hashedPassword(password);
-            user = await prisma.user.create({
-              data: {
-                name: "Admin",
-                email,
-                password: hashedPw,
-                role: "ADMIN",
-              },
-            });
-            return {
-              id: user.id,
-              name: user.name,
-              email: user.email,
-              // notificationsEnabled: user.notificationsEnabled,
-              role: "ADMIN",
-            };
           }
+
+          // Regular user login
+          const user = await prisma.user.findUnique({ where: { email } });
+          if (!user || !user.password) {
+            // dbQueryErrors.inc({
+            //   model: "user",
+            //   error_type: "Invalid credentials",
+            // });
+
+            throw new Error("Invalid credentials");
+          }
+
+          if (!(await comparePassword(password, user.password))) {
+            throw new Error("Invalid credentials");
+          }
+
+          return {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            // notificationsEnabled: user.notificationsEnabled,
+          };
+        } catch (error) {
+          console.error("Authorize error:", error);
+          throw new Error("Authentication failed");
         }
-
-        // Regular user login
-        const user = await prisma.user.findUnique({ where: { email } });
-        if (!user || !user.password) {
-          // dbQueryErrors.inc({
-          //   model: "user",
-          //   error_type: "Invalid credentials",
-          // });
-
-          throw new Error("Invalid credentials");
-        }
-
-        if (!(await comparePassword(password, user.password))) {
-          throw new Error("Invalid credentials");
-        }
-
-        return {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          // notificationsEnabled: user.notificationsEnabled,
-        };
       },
     }),
   ],

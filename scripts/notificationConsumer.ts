@@ -1,4 +1,3 @@
-// scripts/notificationConsumer.ts
 import { Kafka } from "kafkajs";
 import nodemailer from "nodemailer";
 import { prisma } from "../lib/prisma";
@@ -58,7 +57,7 @@ async function sendNotificationEmail({
       from: process.env.EMAIL_USER,
       to: email,
       subject: "Show Schedule Updated",
-      text: emailContent, // Plain-text version
+      text: emailContent,
       html: `
         <h2>Show Schedule Updated!</h2>
         <p>${emailContent.replace(/\n/g, "<br>")}</p>
@@ -81,7 +80,6 @@ async function runConsumer() {
       const { showId, newStartTime } = JSON.parse(message.value!.toString());
       console.log(`Processing show update: ${showId}`);
 
-      // Fetch users with notifications enabled
       const users = await prisma.user.findMany({
         where: {
           notificationsEnabled: true,
@@ -92,7 +90,6 @@ async function runConsumer() {
         },
       });
 
-      // Fetch show details for the email
       const show = await prisma.show.findUnique({
         where: { id: showId },
         include: { movie: true, cinemaHall: { include: { cinema: true } } },

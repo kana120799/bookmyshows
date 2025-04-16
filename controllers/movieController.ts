@@ -37,8 +37,6 @@ export async function deleteMovie(movieId: string): Promise<NextResponse> {
   );
 }
 
-// Get Movie by id
-
 export async function getMovieById(movieId: string): Promise<NextResponse> {
   const data = await prisma.movie.findFirst({
     where: { id: movieId },

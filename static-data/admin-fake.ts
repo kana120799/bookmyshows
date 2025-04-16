@@ -1,4 +1,3 @@
-// app/data/fakeData.ts
 export const fakeUsers = [
   {
     id: "1",

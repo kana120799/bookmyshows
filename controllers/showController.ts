@@ -60,13 +60,12 @@ export async function deleteShow(showId: string) {
   try {
     const result = await prisma.$transaction(
       async (tx) => {
-        // Fetch the show with minimal related data to check existence
         const show = await tx.show.findUnique({
           where: { id: showId },
           include: {
             seats: { select: { id: true } }, // Only fetch seat IDs
             bookings: {
-              select: { id: true, payment: true, ticket: true }, // Minimal booking data
+              select: { id: true, payment: true, ticket: true },
             },
           },
         });
@@ -75,39 +74,33 @@ export async function deleteShow(showId: string) {
           throw new Error("Show not found");
         }
 
-        // Delete dependent records in the correct order
-        // Step 1: Delete MailTicket records
+        //  Delete MailTicket records
         await tx.mailTicket.deleteMany({
           where: {
             bookingId: { in: show.bookings.map((b) => b.id) },
           },
         });
 
-        // Step 2: Delete Payment records
         await tx.payment.deleteMany({
           where: {
             bookingId: { in: show.bookings.map((b) => b.id) },
           },
         });
 
-        // Step 3: Delete BookingSeat records
         await tx.bookingSeat.deleteMany({
           where: {
             showSeatId: { in: show.seats.map((s) => s.id) },
           },
         });
 
-        // Step 4: Delete Booking records
         await tx.booking.deleteMany({
           where: { showId: showId },
         });
 
-        // Step 5: Delete ShowSeat records
         await tx.showSeat.deleteMany({
           where: { showId: showId },
         });
 
-        // Step 6: Delete the Show
         await tx.show.delete({
           where: { id: showId },
         });

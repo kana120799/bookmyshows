@@ -5,7 +5,6 @@ import { Heart, Info, Calendar, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Loader from "./Loader";
 import { useParams, useRouter } from "next/navigation";
-import axios from "axios";
 import { Button } from "./ui/button";
 import { useSelector } from "react-redux";
 import { RootState } from "@/GlobalState/store";
@@ -121,17 +120,30 @@ export default function CinemasByCity({ setShowId }: MovieShowtimesProps) {
   useEffect(() => {
     async function fetchCinemas() {
       try {
-        const response = await axios.get(
-          `/api/admin/cinema/city/?city=${city}&movieId=${id}&date=${schedule[0].fullDate.toISOString()}`
+        const response = await fetch(
+          `/api/admin/cinema/city/?city=${encodeURIComponent(
+            city
+          )}&movieId=${encodeURIComponent(id)}&date=${encodeURIComponent(
+            schedule[0].fullDate.toISOString()
+          )}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            cache: "no-store",
+          }
         );
+        if (!response.ok) {
+          throw new Error(`Failed to fetch data: ${response.status}`);
+        }
 
-        setMovie(response.data.data.movie);
-        setCinemas(response.data.data.cinemas);
-        setShows(response.data.data.shows);
+        const responseData = await response.json();
+        setMovie(responseData.data.movie);
+        setCinemas(responseData.data.cinemas);
+        setShows(responseData.data.shows);
       } catch (err) {
-        setError(
-          "Reservations are not available for this movie or in this area."
-        );
+        setError("There are no reservations for this movie or this location.");
         console.log("Error:", err);
       } finally {
         setLoading(false);
@@ -139,7 +151,7 @@ export default function CinemasByCity({ setShowId }: MovieShowtimesProps) {
     }
 
     fetchCinemas();
-  }, [city, id, schedule]);
+  }, []);
 
   // const selectDate = (selectedDate: Date) => {
   //   setSchedule(
@@ -289,14 +301,26 @@ export default function CinemasByCity({ setShowId }: MovieShowtimesProps) {
               </div>
               <div className="flex flex-wrap gap-3">
                 {shows?.map((item) => {
-                  const currentTime = new Date();
-                  // Show start time
-                  const showStartTime = new Date(item.startTime);
-                  const timeDifference =
-                    showStartTime.getTime() - currentTime.getTime();
-                  // 15 minute buffer time before movie end
-                  const bufferTime = (movie.durationMins - 15) * 60 * 1000;
-                  const isShowAvailable = timeDifference > bufferTime;
+                  // const currentTime = new Date();
+                  // const showStartTime = new Date(item.startTime);
+                  // const movieDurationMs = movie.durationMins * 60 * 1000;
+                  // const movieEndTime = new Date(
+                  //   showStartTime.getTime() + movieDurationMs
+                  // );
+                  // const bufferTimeMs = 30 * 60 * 1000;
+                  // const bufferPoint = new Date(
+                  //   movieEndTime.getTime() - bufferTimeMs
+                  // );
+
+                  // const isShowAvailable = currentTime < bufferPoint;
+
+                  // console.log({
+                  //   currentTime: currentTime.toLocaleTimeString(),
+                  //   showStartTime: showStartTime.toLocaleTimeString(),
+                  //   movieEndTime: movieEndTime.toLocaleTimeString(),
+                  //   bufferPoint: bufferPoint.toLocaleTimeString(),
+                  //   isShowAvailable,
+                  // });
 
                   return (
                     <button
@@ -305,10 +329,10 @@ export default function CinemasByCity({ setShowId }: MovieShowtimesProps) {
                       // disabled={!isShowAvailable}
                       className={cn(
                         "px-4 py-2 border rounded transition-colors",
-                        isShowAvailable
-                          ? "text-green-600 border-green-600 hover:bg-green-50"
-                          : "text-green-600 border-green-600 hover:bg-green-50"
-                        // : "text-gray-600 border-gray-700 cursor-not-allowed opacity-50"
+                        "text-green-600 border-green-600 hover:bg-green-50"
+                        // isShowAvailable
+                        //   ? "text-green-600 border-green-600 hover:bg-green-50"
+                        //   : "text-gray-600 border-gray-700 cursor-not-allowed opacity-50"
                       )}
                     >
                       {new Date(item.startTime).toLocaleTimeString([], {

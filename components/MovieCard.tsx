@@ -5,6 +5,7 @@ import React from "react";
 // import { cn } from "@/lib/utils";
 // import { Film, } from "lucide-react";
 import { Star } from "lucide-react";
+import { useSession } from "next-auth/react";
 // import { Button } from "./ui/button";
 
 interface MovieCardProps {
@@ -15,14 +16,19 @@ interface MovieCardProps {
 
 // MovieCard component
 const MovieCard = ({ data, setLoading, selectedCity }: MovieCardProps) => {
+  const { data: session } = useSession();
   return (
     <>
       <div
         key={data.id}
-        className="group bg-white max-w-[28rem] min-h-[38rem] max-h-[40rem] dark:bg-gray-800 rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] cursor-pointer"
+        className="group bg-white max-w-[28rem] min-h-[43rem] max-h-[43rem] dark:bg-gray-800 rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] cursor-pointer"
         onClick={() => {
           setLoading(true);
-          redirect(`/customer/${selectedCity.toLowerCase()}/movie/${data.id}`);
+          if (session?.user.email) {
+            redirect(
+              `/customer/${selectedCity?.toLowerCase()}/movie/${data.id}`
+            );
+          } else alert("Please sign in to continue.");
         }}
       >
         {/* Image Container */}
@@ -68,53 +74,3 @@ const MovieCard = ({ data, setLoading, selectedCity }: MovieCardProps) => {
 };
 
 export default MovieCard;
-
-// <div
-// className={cn(
-//   "relative overflow-hidden rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-1 w-full max-w-sm min-h-[42rem] max-h-[42rem] bg-white dark:bg-gray-800"
-// )}
-// onClick={() => {
-//   setLoading(true);
-//   redirect(`/customer/${selectedCity.toLowerCase()}/movie/${data.id}`);
-// }}
-// >
-// <div className="aspect-[2/3] w-full relative">
-//   {/* Movie poster */}
-//   <div
-//     className="absolute inset-0 bg-cover bg-center"
-//     style={{
-//       backgroundImage: data.Poster
-//         ? `url(${data.Poster})`
-//         : "linear-gradient(135deg, #9b87f5 0%, #6E59A5 100%)",
-//     }}
-//   />
-//   <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-
-//   {/* Rating badge */}
-//   {data.rating !== undefined && data.rating > 0 && (
-//     <div className="absolute top-3 right-3 flex items-center gap-1 bg-black/60 backdrop-blur-sm px-2 py-1 rounded-full text-white">
-//       <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-//       <span className="text-sm font-medium">
-//         {data.rating.toFixed(1)}
-//       </span>
-//     </div>
-//   )}
-// </div>
-
-// <div className="p-4">
-//   <h3 className="text-lg font-bold text-gray-900 dark:text-white line-clamp-1">
-//     {data.title}
-//   </h3>
-
-//   <div className="mt-2 flex flex-wrap gap-2">
-//     {data.genre?.map((g, index) => (
-//       <span
-//         key={index}
-//         className="inline-block px-2 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300"
-//       >
-//         {g}
-//       </span>
-//     ))}
-//   </div>
-// </div>
-// </div>

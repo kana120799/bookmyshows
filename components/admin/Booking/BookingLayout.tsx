@@ -140,7 +140,7 @@ export default function BookingLayout() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-lg text-gray-600">
-                        ₹{booking.payment.amount}
+                        ₹{booking.payment?.amount}
                       </div>
                     </td>
                   </tr>

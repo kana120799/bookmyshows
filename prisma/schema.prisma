@@ -7,7 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Enums
 enum Role {
   CUSTOMER
   ADMIN
@@ -39,7 +38,6 @@ enum PaymentMode {
 }
 
 
-// User Model
 model User {
   id        String  @id @default(uuid())
   name      String
@@ -54,7 +52,6 @@ model User {
   @@index([email])
 }
 
-// Address Model
 model Address {
   id       String @id @default(uuid())
   street   String
@@ -64,7 +61,6 @@ model Address {
   cinema   Cinema?
 }
 
-// Cinema Model
 model Cinema {
   id        String @id @default(uuid())
   name      String
@@ -73,7 +69,6 @@ model Cinema {
   halls     CinemaHall[]
 }
 
-// Cinema Hall (Theatres inside a Cinema)
 model CinemaHall {
   id         String @id @default(uuid())
   name       String
@@ -84,7 +79,6 @@ model CinemaHall {
   shows      Show[]
 }
 
-// Movie Model
 model Movie {
   id           String    @id @default(uuid())
   title        String
@@ -103,7 +97,6 @@ model Movie {
   shows        Show[]
 }
 
-// Show Model (Screening of a Movie in a Hall)
 model Show {
   id           String @id @default(uuid())
   movieId      String
@@ -124,11 +117,10 @@ model TempBooking {
   expiresAt DateTime
 }
 
-// ShowSeat (Seats available for booking in a Show)
 model ShowSeat {
   id         String @id @default(uuid())
   isReserved Boolean @default(false)
-  status     String @default("AVAILABLE") // e.g., "AVAILABLE", "RESERVED"
+  status     String @default("AVAILABLE") // "AVAILABLE", "LOCKED", "RESERVED"
   price      Float
   showId     String
   show       Show @relation(fields: [showId], references: [id])
@@ -136,20 +128,18 @@ model ShowSeat {
   column     String // e.g., "C1"
   type       SeatType // Optional, if not in layout
   bookingSeats BookingSeat[]
-
-
+  @@index([showId, status])       // Faster lookups
 }
 
-// BookingSeat (Maps ShowSeats to a Booking)
+
 model BookingSeat {
-  id         String @id @default(uuid())
+  id         String   @id @default(uuid())
   bookingId  String
-  booking    Booking @relation(fields: [bookingId], references: [id])
-  showSeatId String @unique
+  booking    Booking  @relation(fields: [bookingId], references: [id])
+  showSeatId String   
   showSeat   ShowSeat @relation(fields: [showSeatId], references: [id])
 }
 
-// Booking Model (Customer's Booking)
 model Booking {
   id          String  @id @default(uuid())
   userId      String
@@ -162,22 +152,21 @@ model Booking {
   ticket      MailTicket?
 }
 
-// Payment Model
 
 model Payment {
-  id              String @id @default(uuid())
+  id              String        @id @default(uuid())
   amount          Float
   mode            PaymentMode
-  createdOn       DateTime @default(now())
+  createdOn       DateTime      @default(now())
   status          PaymentStatus
-  transactionId   String?
-  bookingId       String @unique
-  booking         Booking @relation(fields: [bookingId], references: [id])
-  clientSecret    String? 
-  paymentIntentId String? 
+  transactionId   String?       @unique
+  bookingId       String        @unique
+  booking         Booking       @relation(fields: [bookingId], references: [id])
+  clientSecret    String?
+  paymentIntentId String?       @unique 
+
 }
 
-// Notification Model (For User Messages)
 model Notification {
   id          String @id @default(uuid())
   createdOn   DateTime @default(now())
@@ -186,7 +175,6 @@ model Notification {
   user        User @relation(fields: [userId], references: [id])
 }
 
-// Coupon Model (Discount Codes)
 model Coupon {
   id         String @id @default(uuid())
   code       String @unique
@@ -197,7 +185,6 @@ model Coupon {
   applicableShows String[] // List of show IDs
 }
 
-// MailTicket (For Sending E-Tickets)
 model MailTicket {
   id         String @id @default(uuid())
   bookingId  String @unique

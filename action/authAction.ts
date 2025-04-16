@@ -1,5 +1,5 @@
 "use server";
-import { signIn, signOut } from "@/auth";
+import { auth, signIn, signOut } from "@/auth";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 
 export async function loginWithCredentials(
@@ -11,6 +11,12 @@ export async function loginWithCredentials(
   }
 
   try {
+    // Clear the existing session
+    const session = await auth();
+    if (session) {
+      await signOut({ redirect: false });
+    }
+
     const result = await signIn("credentials", {
       email,
       password,
@@ -33,6 +39,10 @@ export async function loginWithCredentials(
 
 export async function loginWithGoogle() {
   try {
+    const session = await auth();
+    if (session) {
+      await signOut({ redirect: false });
+    }
     await signIn("google", { redirectTo: "/" });
   } catch (error) {
     // isRedirectError is a helper function from Next.js that tells us, "Hey, this error is just for redirecting, not a real problem."

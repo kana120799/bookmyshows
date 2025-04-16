@@ -3,18 +3,11 @@ import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import React from "react";
 
-function BookingConfirmed() {
+function BookingFailed() {
   const searchParams = useSearchParams();
-  const amount = searchParams.get("amount");
-  const router = useRouter();
   const bookingId = searchParams.get("bookingId");
-  const date = new Date()
-    .toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    })
-    .replace(/\//g, "-");
+  const error = searchParams.get("error") || "Payment could not be processed";
+  const router = useRouter();
 
   const baseUrl =
     typeof window !== "undefined"
@@ -30,9 +23,9 @@ function BookingConfirmed() {
       <main className="max-w-md w-full mx-auto p-6 text-center bg-white rounded-xl shadow-lg border border-gray-100">
         <div className="space-y-6">
           <div className="flex justify-center">
-            <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center">
+            <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center">
               <svg
-                className="w-8 h-8 text-blue-600"
+                className="w-8 h-8 text-red-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -42,39 +35,26 @@ function BookingConfirmed() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth="2"
-                  d="M5 13l4 4L19 7"
+                  d="M6 18L18 6M6 6l12 12"
                 />
               </svg>
             </div>
           </div>
 
           <div className="space-y-2">
-            <h1 className="text-3xl font-bold text-gray-900">
-              Booking Confirmed!
-            </h1>
-            <p className="text-gray-600">Your booking is now confirmed</p>
+            <h1 className="text-3xl font-bold text-gray-900">Payment Failed</h1>
+            <p className="text-gray-600">{error}</p>
           </div>
 
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-100">
-            <p className="text-sm text-gray-600">Booking Reference</p>
-            <div className="text-xl font-semibold text-blue-700">
-              #{bookingId}
-            </div>
-          </div>
-
-          <div className="space-y-3 text-left">
-            <div className="flex justify-between">
-              <span className="text-gray-600">Date:</span>
-              <span className="font-medium">{date}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Amount Paid:</span>
-              <span className="font-medium">₹{amount}</span>
+          <div className="bg-gradient-to-r from-red-50 to-pink-50 p-4 rounded-lg border border-red-100">
+            <p className="text-sm text-gray-600">BookingId</p>
+            <div className="text-3xl font-semibold text-red-700">
+              {bookingId}
             </div>
           </div>
 
           <div className="text-sm text-gray-500">
-            <p>You&apos;ll receive a confirmation email shortly.</p>
+            <p>Please try again or use a different payment method.</p>
           </div>
 
           <button
@@ -89,4 +69,4 @@ function BookingConfirmed() {
   );
 }
 
-export default BookingConfirmed;
+export default BookingFailed;
