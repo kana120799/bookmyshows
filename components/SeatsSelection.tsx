@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useRouter, useSearchParams } from "next/navigation";
 import Loader from "./Loader";
+import { useSession } from "next-auth/react";
 
 interface ShowSeat {
   id: string;
@@ -15,15 +16,24 @@ interface ShowSeat {
   type: "REGULAR" | "PREMIUM" | "VIP";
 }
 
+interface BookingData {
+  column: string;
+  row: string;
+  type: string;
+  price: number;
+  id: string;
+}
 const SeatsSelection = ({
   id,
   selectedCity,
   setLockSeat,
   setBookingData,
+  setTempBookId,
 }: {
   selectedCity: string;
   id: string;
   setLockSeat: (value: boolean) => void;
+  setTempBookId: (value: string) => void;
   setBookingData: (
     value: {
       column: string;
@@ -36,15 +46,26 @@ const SeatsSelection = ({
 }) => {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { data: session } = useSession();
+
   const showId = searchParams.get("showId");
+  const cinemaShowId = searchParams.get("showId");
+
   const [seats, setSeats] = useState<ShowSeat[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
 
   const fetchSeats = async () => {
     try {
-      const response = await axios.get(`/api/admin/seats/${showId}`);
-      setSeats(response.data.data);
+      const response = await fetch(`/api/admin/seats/${showId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        next: { revalidate: 10 * 60 * 60 },
+      });
+      const responseData = await response.json();
+      setSeats(responseData.data);
       setLoading(false);
     } catch (error) {
       console.error("Error fetching seats:", error);
@@ -54,16 +75,22 @@ const SeatsSelection = ({
 
   useEffect(() => {
     fetchSeats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSeatClick = (seat: ShowSeat) => {
     if (seat.status !== "AVAILABLE" || seat.isReserved) return;
 
-    setSelectedSeats((prev) =>
-      prev.includes(seat.id)
-        ? prev.filter((id) => id !== seat.id)
-        : [...prev, seat.id]
-    );
+    setSelectedSeats((prev) => {
+      if (prev.includes(seat.id)) {
+        return prev.filter((id) => id !== seat.id);
+      }
+      if (prev.length >= 3) {
+        alert("You can only book a maximum of 3 tickets at a time.");
+        return prev;
+      }
+      return [...prev, seat.id];
+    });
   };
 
   const getSeatStyles = (seat: ShowSeat) => {
@@ -91,6 +118,41 @@ const SeatsSelection = ({
     return acc;
   }, {} as Record<string, ShowSeat[]>);
 
+  async function lockSeats(bookingData: BookingData[]) {
+    const total = bookingData.reduce(
+      (sum, seat) => sum + (seat?.price || 0),
+      0
+    );
+    const convenienceFee = total * 0.15;
+    const subTotal = total + convenienceFee;
+    const donationAmount = 0;
+    const finalAmount = subTotal + donationAmount;
+    if (finalAmount <= 0) return;
+
+    try {
+      const lockResponse = await axios.post(
+        `/api/booking?selectedSeatIds=${bookingData
+          .map((seat) => seat.id)
+          .join(",")}&total=${finalAmount}&showId=${cinemaShowId}&userId=${
+          session?.user?.id
+        }`
+      );
+      const { tempBookingId } = lockResponse.data;
+      console.log("dsfjsfsfsfsfs", lockResponse.data);
+      setTempBookId(tempBookingId);
+      setLoading(false);
+      setLockSeat(true);
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 429) {
+        alert(error.response.data.error);
+      } else {
+        alert("Some seats are already reserved or unavailable");
+      }
+    } finally {
+      router.push("/");
+    }
+  }
+
   if (loading) {
     return <Loader />;
   }
@@ -101,7 +163,7 @@ const SeatsSelection = ({
         className="ml-5 cursor-pointer"
         onClick={() => {
           router.push(
-            `/customer/buyticket/${selectedCity.toLowerCase()}/movie/${id}?view=slot`
+            `/customer/buyticket/${selectedCity.toLowerCase()}/${id}?view=slot`
           );
         }}
       >
@@ -133,7 +195,7 @@ const SeatsSelection = ({
         {/* Seat Grid */}
         <div className="grid gap-6 justify-center">
           {Object.entries(seatsByRow)
-            .sort(([rowA], [rowB]) => rowA.localeCompare(rowB)) // Sort rows alphabetically
+            ?.sort(([rowA], [rowB]) => rowA.localeCompare(rowB))
             ?.map(([row, rowSeats]) => (
               <div
                 key={row}
@@ -216,19 +278,19 @@ const SeatsSelection = ({
               </div>
               <button
                 className="mt-4 w-full bg-gradient-to-r from-blue-400 to-purple-400 text-white py-3 rounded-lg hover:from-blue-500 hover:to-purple-500 transition-all duration-200"
-                onClick={() => {
-                  setBookingData(
-                    seats
-                      ?.filter((seat) => selectedSeats.includes(seat.id))
-                      ?.map((seat) => ({
-                        column: seat.column,
-                        row: seat.row,
-                        type: seat.type,
-                        price: seat.price,
-                        id: seat.id,
-                      }))
-                  );
-                  setLockSeat(true);
+                onClick={async () => {
+                  const bookingData = seats
+                    ?.filter((seat) => selectedSeats.includes(seat.id))
+                    ?.map((seat) => ({
+                      column: seat.column,
+                      row: seat.row,
+                      type: seat.type,
+                      price: seat.price,
+                      id: seat.id,
+                    }));
+                  setBookingData(bookingData);
+                  setLoading(true);
+                  await lockSeats(bookingData);
                 }}
               >
                 Proceed to Booking

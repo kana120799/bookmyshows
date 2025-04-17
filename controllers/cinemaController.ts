@@ -327,7 +327,6 @@ export async function getCinemasByCityAndMovie(
       );
     }
 
-    // Process the data for response
     const hallsMap = new Map();
     const cinemasMap = new Map();
 

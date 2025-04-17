@@ -6,8 +6,8 @@ import { useParams } from "next/navigation";
 import { RootState } from "@/GlobalState/store";
 import { useSelector } from "react-redux";
 import Loader from "@/components/Loader";
-import axios from "axios";
 import { useSession } from "next-auth/react";
+import MovieDetailWrapper from "@/components/MovieDetailWrapper";
 
 interface MovieData {
   id: string;
@@ -41,8 +41,15 @@ export default function Page() {
       try {
         setLoading(true);
 
-        const response = await axios.get(`/api/movie/${movieId}`);
-        setMovieData(response.data.data);
+        const response = await fetch(`/api/movie/${movieId}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          next: { revalidate: 10 * 60 * 60 },
+        });
+        const responseData = await response.json();
+        setMovieData(responseData.data);
       } catch (err) {
         console.error("Failed to fetch movie details:", err);
         setError("Could not load movie details. Please try again later.");
@@ -69,46 +76,31 @@ export default function Page() {
 
   return (
     <>
-      <MovieDetails
-        id={movieData.id}
-        title={movieData.title}
-        description={movieData.description}
-        rating={movieData.rating}
-        voteCount={movieData.voteCount}
-        durationMins={movieData.durationMins}
-        genre={movieData.genres}
-        releaseDate={movieData.releaseDate}
-        language={movieData.language}
-        ageRating={movieData.ageRating}
-        Poster={movieData.Poster}
-        Director={movieData.Director}
-        Actors={movieData.Actors}
-        country={movieData.country}
-        Year={movieData.Year}
-        selectedCity={selectedCity}
-        session={
-          session as
-            | { user: { name: string; email: string; role: string } }
-            | undefined
-        }
-      />
-      {/* <MovieDetails
-        id="1"
-        title="Chhaava"
-        description="A captivating historical drama following the journey of a warrior through extraordinary circumstances, blending emotion, action, and unforgettable moments. The film showcases spectacular battle sequences and emotional depth as it explores themes of loyalty, sacrifice, and honor in a turbulent time."
-        rating={9.3}
-        voteCount={180000}
-        durationMins={161}
-        genre={["Action", "Drama", "Historical"]}
-        releaseDate="2023-12-01"
-        language="Hindi"
-        ageRating="UA16+"
-        Poster="https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=1925&auto=format&fit=crop"
-        Director={["Rajesh Kumar", "Priya Singh"]}
-        Actors={["Vicky Kaushal", "Rashmika Mandanna", "Akshaye Khanna"]}
-        country="India"
-        Year={2023}
-      /> */}
+      <MovieDetailWrapper>
+        <MovieDetails
+          id={movieData.id}
+          title={movieData.title}
+          description={movieData.description}
+          rating={movieData.rating}
+          voteCount={movieData.voteCount}
+          durationMins={movieData.durationMins}
+          genre={movieData.genres}
+          releaseDate={movieData.releaseDate}
+          language={movieData.language}
+          ageRating={movieData.ageRating}
+          Poster={movieData.Poster}
+          Director={movieData.Director}
+          Actors={movieData.Actors}
+          country={movieData.country}
+          Year={movieData.Year}
+          selectedCity={selectedCity}
+          session={
+            session as
+              | { user: { name: string; email: string; role: string } }
+              | undefined
+          }
+        />
+      </MovieDetailWrapper>
     </>
   );
 }

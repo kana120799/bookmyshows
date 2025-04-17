@@ -5,7 +5,7 @@ import { setSelectedCity } from "@/GlobalState/slices/citySlice";
 import { RootState } from "@/GlobalState/store";
 import { useSession } from "next-auth/react";
 import { redirect, usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 export default function Home() {
@@ -15,36 +15,49 @@ export default function Home() {
   const { selectedCity } = useSelector((state: RootState) => state.city);
   const { data: session } = useSession();
 
+  const normalizeCityName = useCallback(
+    (city: string) => city.toLowerCase().trim(),
+    []
+  );
+
   useEffect(() => {
-    const cityFromUrl = pathname.split("/")[2]?.toLowerCase();
-    if (session) {
-      if (pathname === "/" && session?.user.role === "ADMIN") {
-        redirect(`/admin/cinema`);
-      }
-    }
-    if (cityFromUrl && cityFromUrl !== selectedCity.toLowerCase()) {
-      dispatch(setSelectedCity(cityFromUrl.toLowerCase()));
+    const cityFromUrl = pathname.split("/")[2];
+    const normalizedCityFromUrl = cityFromUrl
+      ? normalizeCityName(cityFromUrl)
+      : null;
+    const normalizedSelectedCity = selectedCity
+      ? normalizeCityName(selectedCity)
+      : null;
+
+    if (session?.user.role === "ADMIN" && pathname === "/") {
+      redirect("/admin/cinema");
     }
 
-    if (!cityFromUrl && selectedCity) {
-      dispatch(setSelectedCity(selectedCity.toLowerCase()));
-      redirect(`/customer/home/${selectedCity.toLowerCase()}`);
+    if (
+      normalizedCityFromUrl &&
+      normalizedCityFromUrl !== normalizedSelectedCity
+    ) {
+      dispatch(setSelectedCity(normalizedCityFromUrl));
+    } else if (!normalizedCityFromUrl && normalizedSelectedCity) {
+      redirect(`/customer/home/${normalizedSelectedCity}`);
     }
-    setTimeout(() => setLoading(false), 1000);
-  }, [pathname, selectedCity, dispatch, session?.user.role, session]);
+
+    const loadingTimer = setTimeout(() => setLoading(false), 1000);
+    return () => clearTimeout(loadingTimer);
+  }, [pathname, selectedCity, dispatch, session, normalizeCityName]);
 
   if (loading) {
     return <Loader />;
   }
 
   return (
-    <div>
-      <h1>Welcome to the BookMyShow !</h1>
+    <main className="container mx-auto px-4 py-8">
+      <h1 className="text-2xl font-bold mb-4">Welcome to BookMyShow!</h1>
       {selectedCity ? (
-        <p>Selected City: {selectedCity}</p>
+        <p className="text-lg font-semibold">Selected City: {selectedCity}</p>
       ) : (
-        <p>No city selected yet.</p>
+        <p className="text-lg font-semibold">No city selected yet.</p>
       )}
-    </div>
+    </main>
   );
 }

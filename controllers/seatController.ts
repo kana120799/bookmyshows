@@ -31,7 +31,6 @@ export async function initializeShowSeats({
   premiumPrice: number;
   regularPrice: number;
 }) {
-  // Check seats already exist for this showId
   const existingSeatsCount = await prisma.showSeat.count({
     where: { showId: id },
   });
@@ -56,7 +55,6 @@ export async function initializeShowSeats({
 
   const layout = show.cinemaHall.layout as SeatLayout;
 
-  //  show seats based on  layout
   const showSeats: ShowSeat[] = Object.entries(layout).flatMap(
     ([row, seats]: [string, (Seat | null)[]]) =>
       seats
@@ -81,7 +79,6 @@ export async function initializeShowSeats({
         })
   );
 
-  // Create  show seats
   await prisma.showSeat.createMany({
     data: showSeats,
   });

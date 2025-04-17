@@ -20,7 +20,9 @@ export async function middleware(request: NextRequest) {
 
   // Admin access
   if (userRole === "ADMIN") {
+    console.log("Admin redirect check:", pathname);
     if (pathname.startsWith("/customer")) {
+      console.log("Redirecting admin from customer to /admin");
       return NextResponse.redirect(new URL("/admin", request.url));
     }
     if (!pathname.startsWith("/admin") && pathname !== "/") {
@@ -38,12 +40,9 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  //  no rules are violated, allow the request
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico).*)", // Match all routes except these
-  ],
+  matcher: ["/((?!api|_next/.*|favicon.ico).*)"],
 };

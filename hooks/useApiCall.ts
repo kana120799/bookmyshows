@@ -1,14 +1,12 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 
-// Define the shape of the API response (customize this based on your API)
 interface ApiResponse<T = unknown> {
   data: T;
   status: string;
   message?: string;
 }
 
-// Options for the fetch request
 interface FetchOptions {
   method: string;
   headers: Record<string, string>;
@@ -16,7 +14,6 @@ interface FetchOptions {
 }
 
 /**
- * Custom hook to handle API calls
  * @template T - Type of the API response data
  * @param url - The API endpoint URL
  * @param method - HTTP method ("GET", "POST", etc.)

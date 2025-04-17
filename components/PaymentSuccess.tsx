@@ -3,10 +3,18 @@ import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import React from "react";
 
-function PaymentSuccess() {
+function BookingConfirmed() {
   const searchParams = useSearchParams();
   const amount = searchParams.get("amount");
   const router = useRouter();
+  const bookingId = searchParams.get("bookingId");
+  const date = new Date()
+    .toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    })
+    .replace(/\//g, "-");
 
   const baseUrl =
     typeof window !== "undefined"
@@ -22,9 +30,9 @@ function PaymentSuccess() {
       <main className="max-w-md w-full mx-auto p-6 text-center bg-white rounded-xl shadow-lg border border-gray-100">
         <div className="space-y-6">
           <div className="flex justify-center">
-            <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
+            <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center">
               <svg
-                className="w-8 h-8 text-green-600"
+                className="w-8 h-8 text-blue-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -40,19 +48,33 @@ function PaymentSuccess() {
             </div>
           </div>
 
-          {/* Heading */}
           <div className="space-y-2">
             <h1 className="text-3xl font-bold text-gray-900">
-              Payment Successful!
+              Booking Confirmed!
             </h1>
-            <p className="text-gray-600">Thank you for your booking</p>
+            <p className="text-gray-600">Your booking is now confirmed</p>
           </div>
 
-          <div className="bg-gradient-to-r from-purple-50 to-indigo-50 p-4 rounded-lg border border-purple-100">
-            <p className="text-sm text-gray-600">Amount Paid</p>
-            <div className="text-3xl font-semibold text-purple-700">
-              ₹{amount}
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-100">
+            <p className="text-sm text-gray-600">Booking Reference</p>
+            <div className="text-xl font-semibold text-blue-700">
+              #{bookingId}
             </div>
+          </div>
+
+          <div className="space-y-3 text-left">
+            <div className="flex justify-between">
+              <span className="text-gray-600">Date:</span>
+              <span className="font-medium">{date}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Amount Paid:</span>
+              <span className="font-medium">₹{amount}</span>
+            </div>
+          </div>
+
+          <div className="text-sm text-gray-500">
+            <p>You&apos;ll receive a confirmation email shortly.</p>
           </div>
 
           <button
@@ -67,4 +89,4 @@ function PaymentSuccess() {
   );
 }
 
-export default PaymentSuccess;
+export default BookingConfirmed;
