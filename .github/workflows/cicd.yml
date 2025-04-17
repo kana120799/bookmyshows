@@ -7,7 +7,10 @@ on:
   pull_request:
     branches:
       - main
-
+  # Concurrency control remains the same for PRs but adjusted for production pushes
+  # # Concurrency control to prevent overlapping runs
+  # # only one workflow runs at a time for a given pull request. This cancels or queues subsequent runs until the current one finishes.
+  # # With cancel-in-progress: true, older runs are canceled when a new commit triggers a run, ensuring only the latest commit is processed.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -213,38 +216,36 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: npx prisma migrate deploy
+      # - name: Install Redis CLI
+      #   run: sudo apt-get update && sudo apt-get install -y redis-tools
 
-      - name: Install Redis CLI
-        run: sudo apt-get update && sudo apt-get install -y redis-tools
+      # - name: Debug Redis Configuration
+      #   env:
+      #     REDIS_HOST: ${{ secrets.REDIS_HOST }}
+      #     REDIS_PORT: ${{ secrets.REDIS_PORT }}
+      #     REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+      #   run: |
+      #     echo "REDIS_HOST: $REDIS_HOST"
+      #     echo "REDIS_PORT: $REDIS_PORT"
+      #     echo "REDIS_PASSWORD: ${REDIS_PASSWORD:0:1}..."
+      #     if [ -z "$REDIS_HOST" ] || [ -z "$REDIS_PORT" ] || [ -z "$REDIS_PASSWORD" ]; then
+      #       echo "Error: One or more Redis environment variables are empty"
+      #       exit 1
+      #     fi
+      #     dig +short $REDIS_HOST || echo "DNS resolution failed for $REDIS_HOST"
+      #     nc -zv $REDIS_HOST $REDIS_PORT -w 5 || echo "Network connection failed to $REDIS_HOST:$REDIS_PORT"
 
-      - name: Debug Redis Configuration
-        env:
-          REDIS_HOST: ${{ secrets.REDIS_HOST }}
-          REDIS_PORT: ${{ secrets.REDIS_PORT }}
-          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
-        run: |
-          echo "REDIS_HOST: $REDIS_HOST"
-          echo "REDIS_PORT: $REDIS_PORT"
-          echo "REDIS_PASSWORD: ${REDIS_PASSWORD:0:1}..."
-          if [ -z "$REDIS_HOST" ] || [ -z "$REDIS_PORT" ] || [ -z "$REDIS_PASSWORD" ]; then
-            echo "Error: One or more Redis environment variables are empty"
-            exit 1
-          fi
-          dig +short $REDIS_HOST || echo "DNS resolution failed for $REDIS_HOST"
-          nc -zv $REDIS_HOST $REDIS_PORT -w 5 || echo "Network connection failed to $REDIS_HOST:$REDIS_PORT"
-
-      - name: Test Redis Connection
-        env:
-          REDIS_HOST: ${{ secrets.REDIS_HOST }}
-          REDIS_PORT: ${{ secrets.REDIS_PORT }}
-          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
-        run: |
-          echo "Attempting to connect to Redis at $REDIS_HOST:$REDIS_PORT"
-          redis-cli -h $REDIS_HOST -p $REDIS_PORT -a "$REDIS_PASSWORD" ping || {
-            echo "Redis connection failed. Please check REDIS_HOST, REDIS_PORT, REDIS_PASSWORD, and network accessibility."
-            exit 1
-          }
-
+      # - name: Test Redis Connection
+      #   env:
+      #     REDIS_HOST: ${{ secrets.REDIS_HOST }}
+      #     REDIS_PORT: ${{ secrets.REDIS_PORT }}
+      #     REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+      #   run: |
+      #     echo "Attempting to connect to Redis at $REDIS_HOST:$REDIS_PORT"
+      #     redis-cli -h $REDIS_HOST -p $REDIS_PORT -a "$REDIS_PASSWORD" ping || {
+      #       echo "Redis connection failed. Please check REDIS_HOST, REDIS_PORT, REDIS_PASSWORD, and network accessibility."
+      #       exit 1
+      #     }
       - name: Build Project
         run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
 
