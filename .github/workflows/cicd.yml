@@ -77,17 +77,17 @@ jobs:
       - name: Install Redis CLI
         run: sudo apt-get update && sudo apt-get install -y redis-tools
 
-      # - name: Test Redis Connection
-      #   env:
-      #     REDIS_HOST: ${{ secrets.REDIS_HOST }}
-      #     REDIS_PORT: ${{ secrets.REDIS_PORT }}
-      #     REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
-      #   run: redis-cli -h $REDIS_HOST -p $REDIS_PORT -a $REDIS_PASSWORD ping
-
       - name: Test Redis Connection
         env:
-          REDIS_URL: redis://:${{ secrets.REDIS_PASSWORD }}@${{ secrets.REDIS_HOST }}:${{ secrets.REDIS_PORT }}
-        run: redis-cli -u $REDIS_URL ping
+          REDIS_HOST: ${{ secrets.REDIS_HOST }}
+          REDIS_PORT: ${{ secrets.REDIS_PORT }}
+          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+        run: redis-cli -h $REDIS_HOST -p $REDIS_PORT -a $REDIS_PASSWORD ping
+
+      # - name: Test Redis Connection
+      #   env:
+      #     REDIS_URL: redis://:${{ secrets.REDIS_PASSWORD }}@${{ secrets.REDIS_HOST }}:${{ secrets.REDIS_PORT }}
+      #   run: redis-cli -u $REDIS_URL ping
 
   deploy-preview:
     needs: check-connections
