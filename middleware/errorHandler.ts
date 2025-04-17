@@ -16,7 +16,6 @@ export const handleError = <T = { id: string }>(fn: AsyncHandler<T>) => {
       return await fn(request, resolvedParams);
     } catch (error) {
       if (error instanceof Error) {
-        console.log("fdsjfkhdsiufusdkfj");
         if (error.message === "User not found") {
           return NextResponse.json({ error: error.message }, { status: 404 });
         } else {
