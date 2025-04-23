@@ -113,7 +113,7 @@ export async function lockBooking({
 
   const today = new Date().toISOString().split("T")[0]; // e.g. "2025-04-16"
   const redisKey = `booking_limit:${userId}:${today}`;
-  const maxDailyBookings = 1;
+  const maxDailyBookings = 3;
 
   try {
     const count = await redis.incr(redisKey);
