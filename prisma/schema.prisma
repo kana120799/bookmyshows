@@ -1,7 +1,16 @@
+# Error: PrismaClientInitializationError
+
+# mismatch between the Prisma Client's generated Query Engine and the runtime environment on Vercel.
+# Prisma Client was generated for the debian-openssl-3.0.x runtime, but Vercel's deployment environment requires rhel-openssl-3.0.x.
+# update the schema.prisma file to include the rhel-openssl-3.0.x binary target and regenerate the Prisma Client.
+# The native target ensures compatibility with your local development environment.
+# The rhel-openssl-3.0.x target ensures compatibility with Vercel's serverless runtime.
+
 generator client {
   provider = "prisma-client-js"
    binaryTargets = ["native", "debian-openssl-3.0.x", "rhel-openssl-3.0.x"]
 }
+
 
 datasource db {
   provider = "postgresql"
