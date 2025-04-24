@@ -148,7 +148,6 @@ const SeatsSelection = ({
       } else {
         alert("Some seats are already reserved or unavailable");
       }
-    } finally {
       router.push("/");
     }
   }
