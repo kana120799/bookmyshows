@@ -95,7 +95,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { lockSeats, unlockSeats } from "@/utils/redisLock";
-import redis from "@/utils/redisClient";
+// import redis from "@/utils/redisClient";
 
 export async function lockBooking({
   selectedSeatIds,
@@ -111,32 +111,32 @@ export async function lockBooking({
   const seatIds = selectedSeatIds;
   const lockTTL = 600; // 10 minutes
 
-  const today = new Date().toISOString().split("T")[0]; // e.g. "2025-04-16"
-  const redisKey = `booking_limit:${userId}:${today}`;
-  const maxDailyBookings = 3;
+  // const today = new Date().toISOString().split("T")[0]; // e.g. "2025-04-16"
+  // const redisKey = `booking_limit:${userId}:${today}`;
+  // const maxDailyBookings = 3;
 
   try {
-    const count = await redis.incr(redisKey);
-    if (count === 1) {
-      //  TTL to expire key at end of day
-      const now = new Date();
-      const midnight = new Date(now);
-      midnight.setHours(23, 59, 59, 999);
-      const secondsUntilMidnight = Math.ceil(
-        (midnight.getTime() - now.getTime()) / 1000
-      );
-      await redis.expire(redisKey, secondsUntilMidnight);
-    }
+    // const count = await redis.incr(redisKey);
+    // if (count === 1) {
+    //   //  TTL to expire key at end of day
+    //   const now = new Date();
+    //   const midnight = new Date(now);
+    //   midnight.setHours(23, 59, 59, 999);
+    //   const secondsUntilMidnight = Math.ceil(
+    //     (midnight.getTime() - now.getTime()) / 1000
+    //   );
+    //   await redis.expire(redisKey, secondsUntilMidnight);
+    // }
 
-    if (count > maxDailyBookings) {
-      return NextResponse.json(
-        {
-          error:
-            "Daily booking limit exceeded. Max 3 bookings allowed per day.",
-        },
-        { status: 429 }
-      );
-    }
+    // if (count > maxDailyBookings) {
+    //   return NextResponse.json(
+    //     {
+    //       error:
+    //         "Daily booking limit exceeded. Max 3 bookings allowed per day.",
+    //     },
+    //     { status: 429 }
+    //   );
+    // }
     // Check seat availability first
     const seats = await prisma.showSeat.findMany({
       where: {
