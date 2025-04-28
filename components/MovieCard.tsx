@@ -6,16 +6,16 @@ import React from "react";
 // import { Film, } from "lucide-react";
 import { Star } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { toast } from "react-toastify";
 // import { Button } from "./ui/button";
 
 interface MovieCardProps {
   data: MovieType;
   selectedCity: string;
-  setLoading: (value: boolean) => void;
 }
 
 // MovieCard component
-const MovieCard = ({ data, setLoading, selectedCity }: MovieCardProps) => {
+const MovieCard = ({ data, selectedCity }: MovieCardProps) => {
   const { data: session } = useSession();
   return (
     <>
@@ -23,12 +23,15 @@ const MovieCard = ({ data, setLoading, selectedCity }: MovieCardProps) => {
         key={data.id}
         className="group bg-white max-w-[28rem] min-h-[43rem] max-h-[43rem] dark:bg-gray-800 rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] cursor-pointer"
         onClick={() => {
-          setLoading(true);
           if (session?.user.email) {
             redirect(
               `/customer/${selectedCity?.toLowerCase()}/movie/${data.id}`
             );
-          } else alert("Please sign in to continue.");
+          } else {
+            toast.warn("Please sign in to continue.", {
+              toastId: "auth-warning",
+            });
+          }
         }}
       >
         {/* Image Container */}

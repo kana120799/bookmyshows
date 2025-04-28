@@ -15,6 +15,7 @@ import {
   Edit,
 } from "lucide-react";
 import Loader from "./Loader";
+import { toast } from "react-toastify";
 
 interface UserProfile {
   name: string;
@@ -117,16 +118,22 @@ const UpdateProfile = () => {
       }
     } catch (error) {
       console.error("Error updating profile:", error);
-      alert("Failed to update profile");
+      toast.warn("Failed to update profile", {
+        toastId: "auth-warning",
+      });
     } finally {
       setIsLoading(false);
-      alert("Profile updated successfully. Login Again... ");
+      toast.warn("Profile updated successfully. Login Again... ", {
+        toastId: "auth-warning",
+      });
       handleSignOut();
     }
   };
 
   const handleDeleteAccount = async () => {
-    alert("This Service Not Available Now...");
+    toast.warn("This Service Not Available Now...", {
+      toastId: "auth-warning",
+    });
   };
 
   if (status === "loading") {
