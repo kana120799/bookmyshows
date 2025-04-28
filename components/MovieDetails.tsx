@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Share2, Star, Calendar, Globe, User, Film } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { toast } from "react-toastify";
 
 interface MovieDetailsProps {
   id: string;
@@ -187,7 +188,11 @@ function MovieDetails({
                     redirect(
                       `/customer/buyticket/${selectedCity.toLowerCase()}/${id}?view=slot`
                     );
-                  else alert("Please Sign in...");
+                  else {
+                    toast.warn("Please sign in to continue.", {
+                      toastId: "auth-warning",
+                    });
+                  }
                 }}
               >
                 Book tickets

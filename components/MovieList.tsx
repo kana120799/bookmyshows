@@ -179,7 +179,6 @@ function MovieList() {
                     data={data}
                     key={data.id}
                     selectedCity={selectedCity}
-                    setLoading={setLoading}
                   />
                 ))}
               </div>

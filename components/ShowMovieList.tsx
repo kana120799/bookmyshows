@@ -28,14 +28,14 @@ function ShowMovieList() {
           }
         );
 
-        if (!response.ok) {
-          if (response.status === 429) {
-            alert(
-              "Rate limit exceeded. Maximum 5 requests per hour allowed. Please try again later"
-            );
-          }
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        // if (!response.ok) {
+        //   if (response.status === 429) {
+        //     alert(
+        //       "Rate limit exceeded. Maximum 5 requests per hour allowed. Please try again later"
+        //     );
+        //   }
+        //   throw new Error(`HTTP error! status: ${response.status}`);
+        // }
 
         // If status is 200 (response.ok is true), parse the JSON
         const data = await response.json();
@@ -54,6 +54,7 @@ function ShowMovieList() {
   if (loading) {
     return <Loader />;
   }
+  console.log("fdsiuf89fdsfds", list);
   return (
     <>
       <div className="bg-gray-50 dark:bg-gray-900 mb-5">
@@ -82,7 +83,6 @@ function ShowMovieList() {
                       data={data}
                       key={data.id}
                       selectedCity={selectedCity}
-                      setLoading={setLoading}
                     />
                   ))}
                 </div>
