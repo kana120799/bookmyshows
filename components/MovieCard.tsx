@@ -6,7 +6,8 @@ import React from "react";
 // import { Film, } from "lucide-react";
 import { Star } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
+
 // import { Button } from "./ui/button";
 
 interface MovieCardProps {
@@ -28,9 +29,7 @@ const MovieCard = ({ data, selectedCity }: MovieCardProps) => {
               `/customer/${selectedCity?.toLowerCase()}/movie/${data.id}`
             );
           } else {
-            toast.warn("Please sign in to continue.", {
-              toastId: "auth-warning",
-            });
+            toast.warning("Please sign in to continue.");
           }
         }}
       >

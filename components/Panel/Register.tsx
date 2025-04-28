@@ -2,7 +2,8 @@ import { loginWithCredentials } from "@/action/authAction";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FormEvent, useState } from "react";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
+
 import { z } from "zod";
 
 const registerSchema = z.object({
@@ -99,16 +100,12 @@ function Register({
         setToggleCredential(!toggleCredential);
       } else {
         const { error } = await res.json();
-        toast.warn(error, {
-          toastId: "auth-warning",
-        });
+        toast.warning(error);
       }
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       setIsLoading(false);
-      toast.warn("An error occurred during registration", {
-        toastId: "auth-warning",
-      });
+      toast.warning("An error occurred during registration");
     }
   };
 
