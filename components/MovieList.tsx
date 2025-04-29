@@ -58,8 +58,16 @@ function MovieList() {
         headers: {
           "Content-Type": "application/json",
         },
-        next: { revalidate: 10 * 60 * 60 },
+        // next: { revalidate: 10 * 60 * 60 },
       });
+      // const params = {
+      //   page: page.toString(),
+      //   limit: moviesPerPage.toString(),
+      //   genre: selectedGenre,
+      //   language: selectedLanguage,
+      //   search: movieSearch,
+      // };
+      // const response = await fetchMoviesList(params);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

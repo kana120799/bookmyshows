@@ -99,7 +99,10 @@ export default function Navbar() {
           <div className="flex items-center justify-between">
             {/* Left Section: Logo + Search */}
             <div className="flex items-center gap-4">
-              <Link href="/" className="flex-shrink-0">
+              <Link
+                href={`/customer/home/{selectedCity}`}
+                className="flex-shrink-0"
+              >
                 <Image
                   src={logo}
                   alt="Logo"
