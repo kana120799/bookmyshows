@@ -100,7 +100,7 @@ export default function Navbar() {
             {/* Left Section: Logo + Search */}
             <div className="flex items-center gap-4">
               <Link
-                href={`/customer/home/{selectedCity}`}
+                href={`/customer/home/${selectedCity}`}
                 className="flex-shrink-0"
               >
                 <Image
