@@ -24,12 +24,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 export default function Navbar() {
   const dispatch = useDispatch();
   const pathname = usePathname();
-  const router = useRouter();
   // ("/customer/home/[city]")
   const isExactCityPath = /^\/customer\/home\/[^/]+$/.test(pathname);
   const { data: session, status } = useSession();
@@ -188,22 +187,24 @@ export default function Navbar() {
                     </div>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-48 mt-2">
-                    <DropdownMenuItem
-                      onClick={() => {
-                        router.push("/customer/profile");
-                      }}
-                      className="cursor-pointer text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 text-xl "
-                    >
-                      Profile
+                    <DropdownMenuItem asChild>
+                      <Link
+                        href="/customer/profile"
+                        className="cursor-pointer text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 text-xl w-full"
+                      >
+                        Profile
+                      </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => {
-                        router.push("/customer/mybookings");
-                      }}
-                      className="cursor-pointer text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 text-xl mt-4 mb-4"
-                    >
-                      My Bookings
+
+                    <DropdownMenuItem asChild>
+                      <Link
+                        href="/customer/mybookings"
+                        className="cursor-pointer text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 text-xl w-full"
+                      >
+                        My Bookings
+                      </Link>
                     </DropdownMenuItem>
+
                     <DropdownMenuItem
                       onClick={handleSignOut}
                       className="cursor-pointer text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 text-xl"
