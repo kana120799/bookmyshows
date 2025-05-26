@@ -117,7 +117,7 @@ function Login({
         if (updatedSession.user.role === "ADMIN") {
           router.push("/admin/cinema");
         } else {
-          router.push("/");
+          router.push("/customer/home/mumbai");
         }
       } else {
         throw new Error("Session update failed");
