@@ -70,9 +70,9 @@ function Login({
     try {
       await loginWithCredentials(data.email, data.password);
       setIsLoginVisible(false);
-      await update();
+      await update(); // Ensure session is updated
       router.push("/");
-      router.refresh();
+      // router.refresh();  // forcing a re-render
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       setErrors({
