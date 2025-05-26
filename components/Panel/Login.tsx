@@ -122,8 +122,8 @@ function Login({
       } else {
         throw new Error("Session update failed");
       }
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
+      console.log(error);
       setErrors({
         general: "Login failed. Please check your credentials and try again.",
       });
