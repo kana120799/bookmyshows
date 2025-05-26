@@ -4,13 +4,11 @@ import { NextRequest, NextResponse } from "next/server";
 export async function middleware(request: NextRequest) {
   const session = await auth();
   const { pathname } = request.nextUrl;
-  console.log("Middleware - Pathname:", pathname, "Session:", session);
-  // Allow public routes to proceed without interference
-  if (pathname === "/payment-success" || pathname === "/") {
+
+  if (pathname === "/payment-success") {
     return NextResponse.next();
   }
 
-  // If no session, restrict access to admin routes
   if (!session) {
     if (pathname.startsWith("/admin")) {
       return NextResponse.redirect(new URL("/", request.url));
@@ -19,10 +17,12 @@ export async function middleware(request: NextRequest) {
   }
 
   const userRole = session?.user?.role;
-  console.log("userRole", userRole);
+
   // Admin access
   if (userRole === "ADMIN") {
+    console.log("Admin redirect check:", pathname);
     if (pathname.startsWith("/customer")) {
+      console.log("Redirecting admin from customer to /admin");
       return NextResponse.redirect(new URL("/admin", request.url));
     }
     if (!pathname.startsWith("/admin") && pathname !== "/") {

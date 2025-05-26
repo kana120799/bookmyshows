@@ -44,6 +44,45 @@ function Login({
   const { update } = useSession();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const router = useRouter();
+
+  // const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
+  //   e.preventDefault();
+  //   setIsLoading(true);
+  //   setErrors({});
+
+  //   const formData = new FormData(e.currentTarget);
+  //   const data = {
+  //     email: formData.get("email") as string,
+  //     password: formData.get("password") as string,
+  //   };
+
+  //   const validation = loginSchema.safeParse(data);
+
+  //   if (!validation.success) {
+  //     const fieldErrors: Record<string, string> = {};
+  //     validation.error.issues.forEach((issue) => {
+  //       fieldErrors[issue.path[0]] = issue.message;
+  //     });
+  //     setErrors(fieldErrors);
+  //     setIsLoading(false);
+  //     return;
+  //   }
+
+  //   try {
+  //     await loginWithCredentials(data.email, data.password);
+  //     setIsLoginVisible(false);
+  //     await update(); // Ensure session is updated
+  //     router.push("/");
+  //     // router.refresh();  // forcing a re-render
+  //     // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  //   } catch (error) {
+  //     setErrors({
+  //       general: "Login failed. Please check your credentials and try again.",
+  //     });
+  //     setIsLoading(false);
+  //   }
+  // };
+
   const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
@@ -69,10 +108,20 @@ function Login({
 
     try {
       await loginWithCredentials(data.email, data.password);
-      setIsLoginVisible(false);
-      await update(); // Ensure session is updated
-      router.push("/");
-      // router.refresh();  // forcing a re-render
+
+      // Update the session and wait for it to complete
+      const updatedSession = await update();
+
+      if (updatedSession?.user) {
+        setIsLoginVisible(false);
+        if (updatedSession.user.role === "ADMIN") {
+          router.push("/admin/cinema");
+        } else {
+          router.push("/");
+        }
+      } else {
+        throw new Error("Session update failed");
+      }
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       setErrors({

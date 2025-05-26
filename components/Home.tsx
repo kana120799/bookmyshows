@@ -32,13 +32,7 @@ export default function Home() {
     const normalizedSelectedCity = selectedCity
       ? normalizeCityName(selectedCity)
       : null;
-    console.log(
-      session,
-      "==>>",
-      session?.user.role === "ADMIN",
-      pathname,
-      pathname === "/"
-    );
+
     if (session?.user.role === "ADMIN" && pathname === "/") {
       router.push("/admin/cinema");
       return;
@@ -72,10 +66,10 @@ export default function Home() {
 
   return (
     <main className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-4">Welcome to BookMyShow!</h1>
       {selectedCity ? (
-        <p className="text-lg font-semibold">Selected City: {selectedCity}</p>
+        <Loader />
       ) : (
+        // <p className="text-lg font-semibold">Selected City: {selectedCity}</p>
         <p className="text-lg font-semibold">No city selected yet.</p>
       )}
     </main>
