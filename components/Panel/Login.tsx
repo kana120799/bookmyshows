@@ -117,13 +117,13 @@ function Login({
         if (updatedSession.user.role === "ADMIN") {
           router.push("/admin/cinema");
         } else {
-          router.push("/");
+          router.push("/customer/home/mumbai");
         }
       } else {
         throw new Error("Session update failed");
       }
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
+      console.log(error);
       setErrors({
         general: "Login failed. Please check your credentials and try again.",
       });
