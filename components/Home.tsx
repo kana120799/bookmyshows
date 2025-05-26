@@ -32,7 +32,13 @@ export default function Home() {
     const normalizedSelectedCity = selectedCity
       ? normalizeCityName(selectedCity)
       : null;
-
+    console.log(
+      session,
+      "==>>",
+      session?.user.role === "ADMIN",
+      pathname,
+      pathname === "/"
+    );
     if (session?.user.role === "ADMIN" && pathname === "/") {
       router.push("/admin/cinema");
       return;
