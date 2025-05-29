@@ -5,8 +5,18 @@ import { setSelectedCity } from "@/GlobalState/slices/citySlice";
 import { RootState } from "@/GlobalState/store";
 import { useSession } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
+
+function useHasHydrated() {
+  const [hasHydrated, setHasHydrated] = useState(false);
+
+  useEffect(() => {
+    setHasHydrated(true);
+  }, []);
+
+  return hasHydrated;
+}
 
 export default function Home() {
   const dispatch = useDispatch();
@@ -15,63 +25,66 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const { selectedCity } = useSelector((state: RootState) => state.city);
   const { data: session, status } = useSession();
+  const hasHydrated = useHasHydrated();
 
-  const normalizeCityName = useCallback(
-    (city: string) => city.toLowerCase().trim(),
-    []
+  const normalizeCityName = (city: string) => city.toLowerCase().trim();
+
+  // memo city value
+  const cityFromUrl = useMemo(() => {
+    const city = pathname.split("/")[2];
+    return city ? normalizeCityName(city) : null;
+  }, [pathname]);
+
+  const normalizedSelectedCity = useMemo(
+    () => (selectedCity ? normalizeCityName(selectedCity) : null),
+    [selectedCity]
   );
 
   useEffect(() => {
-    // Waiting for session status to resolve and hydration to complete.
-    if (status === "loading") return;
-
-    const cityFromUrl = pathname.split("/")[2];
-    const normalizedCityFromUrl = cityFromUrl
-      ? normalizeCityName(cityFromUrl)
-      : null;
-    const normalizedSelectedCity = selectedCity
-      ? normalizeCityName(selectedCity)
-      : null;
+    if (!hasHydrated || status === "loading") return;
 
     if (session?.user.role === "ADMIN" && pathname === "/") {
-      router.push("/admin/cinema");
-      return;
+      router.replace("/admin/cinema");
+    }
+  }, [hasHydrated, status, session, pathname, router]);
+
+  // Handle city selection and redirection
+  useEffect(() => {
+    if (!hasHydrated || status === "loading") return;
+
+    if (cityFromUrl && cityFromUrl !== normalizedSelectedCity) {
+      dispatch(setSelectedCity(cityFromUrl));
+    } else if (!cityFromUrl && normalizedSelectedCity) {
+      router.replace(`/customer/home/${normalizedSelectedCity}`);
     }
 
-    if (
-      normalizedCityFromUrl &&
-      normalizedCityFromUrl !== normalizedSelectedCity
-    ) {
-      dispatch(setSelectedCity(normalizedCityFromUrl));
-    } else if (!normalizedCityFromUrl && normalizedSelectedCity) {
-      router.push(`/customer/home/${normalizedSelectedCity}`);
-    }
-
-    // Set loading to false after a short delay to ensure rendering stability
+    //  async data loading
     const loadingTimer = setTimeout(() => setLoading(false), 1000);
     return () => clearTimeout(loadingTimer);
   }, [
-    pathname,
-    selectedCity,
-    dispatch,
-    session,
+    hasHydrated,
     status,
-    normalizeCityName,
+    cityFromUrl,
+    normalizedSelectedCity,
+    dispatch,
     router,
   ]);
 
-  if (status === "loading" || loading) {
+  if (!hasHydrated || status === "loading" || loading) {
     return <Loader />;
   }
 
+  // return (
+  //   <main>
+  //     <h1>Welcome to the Home Page</h1>
+  //     <p>Selected City: {selectedCity || "No city selected"}</p>
+  //   </main>
+  // );
   return (
-    <main className="container mx-auto px-4 py-8">
-      {selectedCity ? (
-        <Loader />
-      ) : (
-        // <p className="text-lg font-semibold">Selected City: {selectedCity}</p>
-        <p className="text-lg font-semibold">No city selected yet.</p>
-      )}
+    <main className="flex items-center justify-center min-h-screen bg-gray-100">
+      <h1 className="text-4xl font-bold text-[#FF5555] animate-fade-in-scale">
+        Welcome to the Cinema
+      </h1>
     </main>
   );
 }

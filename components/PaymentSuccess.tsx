@@ -1,13 +1,23 @@
 "use client";
+
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 function BookingConfirmed() {
+  const [hasMounted, setHasMounted] = useState(false);
   const searchParams = useSearchParams();
-  const amount = searchParams.get("amount");
   const router = useRouter();
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
+  if (!hasMounted) return null;
+
+  const amount = searchParams.get("amount");
   const bookingId = searchParams.get("bookingId");
+
   const date = new Date()
     .toLocaleDateString("en-GB", {
       day: "2-digit",
@@ -21,6 +31,7 @@ function BookingConfirmed() {
       ? window.location.origin
       : "http://localhost:3000";
   const returnUrl = `${baseUrl}/`;
+
   const handleRedirect = () => {
     router.push(returnUrl);
   };
