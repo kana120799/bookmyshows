@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, FormEvent } from "react";
-import { redirect, useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import axios from "axios";
 import Loader from "@/components/Loader";
 
@@ -26,6 +26,7 @@ interface CinemaForm {
 
 export default function EditCinema() {
   const { id } = useParams();
+  const router = useRouter();
   const [formData, setFormData] = useState<CinemaForm | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -95,7 +96,7 @@ export default function EditCinema() {
       if (response.statusText === "OK") {
         throw new Error("Failed to update cinema");
       }
-      redirect("/cinema");
+      router.push("/cinema");
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {

@@ -1,6 +1,6 @@
 "use client";
 
-import { redirect, useParams, useSearchParams } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import CinemasByCity from "@/components/CinemaByCity";
 import { useSelector } from "react-redux";
 import { RootState } from "@/GlobalState/store";
@@ -17,6 +17,7 @@ const MemoizedSelectedSeatsPanel = React.memo(SelectedSeatsPanel);
 export default function Page() {
   const searchParams = useSearchParams();
   const { data: session, status } = useSession();
+  const router = useRouter();
   const { selectedCity } = useSelector((state: RootState) => state.city);
   const { id } = useParams<{ id: string }>();
 
@@ -34,12 +35,12 @@ export default function Page() {
   const validViews = ["slot", "seats"];
 
   if (!view || !validViews.includes(view)) {
-    redirect(`/customer/${selectedCity.toLowerCase()}/movie/${id}`);
+    router.push(`/customer/${selectedCity.toLowerCase()}/movie/${id}`);
   }
 
   useEffect(() => {
     if (showId && view === "slot" && status === "authenticated") {
-      redirect(
+      router.push(
         `/customer/buyticket/${selectedCity.toLowerCase()}/${id}?view=seats&showId=${showId}&userId=${
           session?.user?.id
         }`
