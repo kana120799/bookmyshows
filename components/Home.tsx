@@ -74,17 +74,12 @@ export default function Home() {
     return <Loader />;
   }
 
+return <Loader />;
   // return (
-  //   <main>
-  //     <h1>Welcome to the Home Page</h1>
-  //     <p>Selected City: {selectedCity || "No city selected"}</p>
+  //   <main className="flex items-center justify-center min-h-screen bg-gray-100">
+  //     <h1 className="text-4xl font-bold text-[#FF5555] animate-fade-in-scale">
+  //       Welcome to the Cinema
+  //     </h1>
   //   </main>
   // );
-  return (
-    <main className="flex items-center justify-center min-h-screen bg-gray-100">
-      <h1 className="text-4xl font-bold text-[#FF5555] animate-fade-in-scale">
-        Welcome to the Cinema
-      </h1>
-    </main>
-  );
 }

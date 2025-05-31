@@ -210,7 +210,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               }
               console.error("Authorize: Invalid admin password");
               return null;
-            } else {
+            }
+            // Admin enroll
+            else {
               const hashedPw = await hashedPassword(password);
               user = await prisma.user.create({
                 data: {
