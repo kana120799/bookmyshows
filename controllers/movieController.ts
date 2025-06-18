@@ -1,6 +1,8 @@
 import { MovieType, MovieFilters } from "@/types/movieType";
 import { prisma } from "@/lib/prisma";
+import Fuse from "fuse.js";
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 // import { dbQueryDuration, httpRequestDuration } from "@/lib/metrics";
 // import { redis } from "@/utils/redisClient";
 // import cloudinary from "@/lib/cloudinary";
@@ -45,6 +47,90 @@ export async function getMovieById(movieId: string): Promise<NextResponse> {
 }
 
 // Get Movie
+// export async function fetchMovies(
+//   search?: string,
+//   language?: string,
+//   genre?: string,
+//   page: number = 1,
+//   limit: number = 6
+// ) {
+//   // const cacheKey = `movies:${search || "all"}:${language || "all"}:${genre || "all"}:p${page}:l${limit}`;
+//   // console.log("Cache Key:", cacheKey);
+
+//   // let cachedResult = null;
+//   // let cacheError = null;
+
+//   // try {
+//   //   cachedResult = await redis.get(cacheKey);
+//   //   if (cachedResult) {
+//   //     console.log("Cache Hit:");
+//   //     return NextResponse.json(JSON.parse(cachedResult), { status: 200 });
+//   //   }
+//   //   console.log("Cache Miss");
+//   // } catch (error) {
+//   //   cacheError = error;
+//   //   console.error("Redis Cache Error (Falling back to DB):", cacheError);
+//   // }
+//   // const start = Date.now();
+
+//   const filters: MovieFilters = {
+//     OR: search
+//       ? [
+//           { title: { contains: search, mode: "insensitive" } },
+//           { description: { contains: search, mode: "insensitive" } },
+//         ]
+//       : undefined,
+//     language: language ? { equals: language, mode: "insensitive" } : undefined,
+//     genre: genre ? { has: genre } : undefined,
+//   };
+
+//   // Remove undefined filters
+//   const cleanedFilters: Partial<MovieFilters> = Object.fromEntries(
+//     //Use an ESLint/TypeScript comment to suppress the warning (if configured in your project):
+//     // eslint-disable-next-line @typescript-eslint/no-unused-vars
+//     Object.entries(filters).filter(([_, value]) => value !== undefined)
+//   );
+//   //  skip value for pagination
+//   const skip = (page - 1) * limit;
+
+//   const [movies, total] = await Promise.all([
+//     prisma.movie.findMany({
+//       where: cleanedFilters,
+//       orderBy: { releaseDate: "desc" },
+//       skip,
+//       take: limit,
+//       // fromCache: cachedResult !== null,
+//     }),
+//     // Get total count for reference
+//     prisma.movie.count({
+//       where: cleanedFilters,
+//     }),
+//   ]);
+
+//   // const duration = (Date.now() - start) / 1000;
+//   // dbQueryDuration.labels("movie", "get", "success").observe(duration);
+//   const response = {
+//     data: movies,
+//     page,
+//     limit,
+//     total,
+//     hasMore: skip + movies.length < total,
+//   };
+
+//   // if (!cacheError) {
+//   //   try {
+//   //     await redis.set(cacheKey, JSON.stringify(response), "EX", 3000);
+//   //     console.log("Cached with TTL:", await redis.ttl(cacheKey));
+//   //   } catch (error) {
+//   //     console.error("Redis Set Error (Data still served from DB):", error);
+//   //   }
+//   // }
+
+//   return NextResponse.json(response, { status: 200 });
+// }
+
+// ===>>>    fetch movie with fuzzy search
+
 export async function fetchMovies(
   search?: string,
   language?: string,
@@ -52,79 +138,69 @@ export async function fetchMovies(
   page: number = 1,
   limit: number = 6
 ) {
-  // const cacheKey = `movies:${search || "all"}:${language || "all"}:${genre || "all"}:p${page}:l${limit}`;
-  // console.log("Cache Key:", cacheKey);
+  try {
+    //  DB filtering for language and genre only
+    const filters: Prisma.MovieWhereInput = {
+      //MovieWhereInput :- full IntelliSense, type safety, and resolves the error properly without needing any.
+      language: language
+        ? { equals: language, mode: "insensitive" }
+        : undefined,
+      genre: genre ? { has: genre } : undefined,
+    };
 
-  // let cachedResult = null;
-  // let cacheError = null;
+    // Clean undefined filters
+    const cleanedFilters = Object.fromEntries(
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      Object.entries(filters).filter(([_, value]) => value !== undefined)
+    );
 
-  // try {
-  //   cachedResult = await redis.get(cacheKey);
-  //   if (cachedResult) {
-  //     console.log("Cache Hit:");
-  //     return NextResponse.json(JSON.parse(cachedResult), { status: 200 });
-  //   }
-  //   console.log("Cache Miss");
-  // } catch (error) {
-  //   cacheError = error;
-  //   console.error("Redis Cache Error (Falling back to DB):", cacheError);
-  // }
-  // const start = Date.now();
-
-  const filters: MovieFilters = {
-    OR: search
-      ? [
-          { title: { contains: search, mode: "insensitive" } },
-          { description: { contains: search, mode: "insensitive" } },
-        ]
-      : undefined,
-    language: language ? { equals: language, mode: "insensitive" } : undefined,
-    genre: genre ? { has: genre } : undefined,
-  };
-
-  // Remove undefined filters
-  const cleanedFilters: Partial<MovieFilters> = Object.fromEntries(
-    //Use an ESLint/TypeScript comment to suppress the warning (if configured in your project):
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    Object.entries(filters).filter(([_, value]) => value !== undefined)
-  );
-  //  skip value for pagination
-  const skip = (page - 1) * limit;
-
-  const [movies, total] = await Promise.all([
-    prisma.movie.findMany({
+    const allMovies = await prisma.movie.findMany({
       where: cleanedFilters,
       orderBy: { releaseDate: "desc" },
-      skip,
-      take: limit,
-      // fromCache: cachedResult !== null,
-    }),
-    // Get total count for reference
-    prisma.movie.count({
-      where: cleanedFilters,
-    }),
-  ]);
+    });
 
-  // const duration = (Date.now() - start) / 1000;
-  // dbQueryDuration.labels("movie", "get", "success").observe(duration);
-  const response = {
-    data: movies,
-    page,
-    limit,
-    total,
-    hasMore: skip + movies.length < total,
-  };
+    let filteredMovies = allMovies;
 
-  // if (!cacheError) {
-  //   try {
-  //     await redis.set(cacheKey, JSON.stringify(response), "EX", 3000);
-  //     console.log("Cached with TTL:", await redis.ttl(cacheKey));
-  //   } catch (error) {
-  //     console.error("Redis Set Error (Data still served from DB):", error);
-  //   }
-  // }
+    // fuzzy search on the result
+    if (search) {
+      const fuse = new Fuse(allMovies, {
+        keys: [
+          { name: "title", weight: 0.7 }, // Give more weight to title matches
+          { name: "description", weight: 0.3 },
+        ],
+        // threshold: 0.4, //  (0.0 = perfect match, 1.0 = match anything)
+        ignoreLocation: true, // Search anywhere in the string
+        includeScore: true,
 
-  return NextResponse.json(response, { status: 200 });
+        threshold: 0.6, // Looser match (0.0 = exact, 1.0 = everything)
+        distance: 100, // How far a typo can be in a string
+      });
+
+      const result = fuse.search(search);
+      filteredMovies = result.map((r) => r.item);
+    }
+
+    const total = filteredMovies.length;
+    const skip = (page - 1) * limit;
+    const paginatedMovies = filteredMovies.slice(skip, skip + limit);
+    console.log("jfsfs", paginatedMovies.length, paginatedMovies);
+    return NextResponse.json(
+      {
+        data: paginatedMovies,
+        page,
+        limit,
+        total,
+        hasMore: skip + paginatedMovies.length < total,
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Error fetching movies:", error);
+    return NextResponse.json(
+      { message: "Error fetching movies", error: (error as Error).message },
+      { status: 500 }
+    );
+  }
 }
 
 export async function getMovieBySearch(search?: string) {

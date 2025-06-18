@@ -106,6 +106,7 @@ model Movie {
   genre        String[]  
   rating       Float?    @default(0.0)
   shows        Show[]
+ 
 }
 
 model Show {

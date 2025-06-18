@@ -113,6 +113,14 @@ const MovieCard = ({ data, selectedCity }: MovieCardProps) => {
         }
       }}
     >
+      {/* <div
+             className="absolute inset-0 bg-cover bg-center"
+             style={{
+               backgroundImage: data.Poster ? `url(${data.Poster})`
+                 : "linear-gradient(135deg, #9b87f5 0%, #6E59A5 100%)",
+             }}
+           /> */}
+
       {/* Image Container */}
       <div className="relative min-h-[84%] overflow-hidden">
         <Image
