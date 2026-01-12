@@ -5,8 +5,8 @@ import { handleError } from "@/middleware/errorHandler";
 // Todo: check seat functionality
 
 export const DELETE = handleError(
-  async (req: NextRequest, params: { id: string }) => {
-    const cinemaId = params.id;
+  async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+    const { id: cinemaId } = await params;
     return await deleteCinema(cinemaId);
   }
 );

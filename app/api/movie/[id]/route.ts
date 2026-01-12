@@ -3,13 +3,15 @@ import { deleteMovie, getMovieById } from "@/controllers/movieController";
 import { handleError } from "@/middleware/errorHandler";
 
 export const DELETE = handleError(
-  async (req: NextRequest, params: { id: string }) => {
-    return await deleteMovie(params.id);
+  async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+    const { id } = await params;
+    return await deleteMovie(id);
   }
 );
 
 export const GET = handleError(
-  async (req: NextRequest, params: { id: string }) => {
-    return await getMovieById(params.id);
+  async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+    const { id } = await params;
+    return await getMovieById(id);
   }
 );

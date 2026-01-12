@@ -3,7 +3,8 @@ import { handleError } from "@/middleware/errorHandler";
 import { getShowSeats } from "@/controllers/seatController";
 
 export const GET = handleError(
-  async (req: NextRequest, params: { id: string }) => {
-    return await getShowSeats(params.id);
+  async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+    const { id } = await params;
+    return await getShowSeats(id);
   }
 );
