@@ -159,9 +159,10 @@ import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
 import { comparePassword, hashedPassword } from "./action/hash";
+import { authConfig } from "./auth.config";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  trustHost: true,
+  ...authConfig,
   providers: [
     GoogleProvider({
       clientId: process.env.AUTH_GOOGLE_ID,
@@ -177,7 +178,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         try {
           if (!credentials?.email || !credentials?.password) {
             console.error("Authorize: Missing email or password");
-            return null; // Return null instead of throwing to avoid triggering stack frame requests
+            return null;
           }
 
           const { email, password } = credentials as {
@@ -251,34 +252,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           };
         } catch (error) {
           console.error("Authorize error:", error);
-          return null; // Return null to prevent middleware errors
+          return null;
         }
       },
     }),
   ],
-  pages: {
-    signIn: "/",
-    signOut: "/",
-  },
   callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-        token.name = user.name;
-        token.email = user.email;
-        token.role = user.role;
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      if (token) {
-        session.user.id = token.id as string;
-        session.user.name = token.name as string;
-        session.user.email = token.email as string;
-        session.user.role = token.role as string;
-      }
-      return session;
-    },
+    ...authConfig.callbacks,
     async signIn({ user, account }) {
       if (account?.provider === "google") {
         try {
@@ -292,7 +272,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           if (!dbUser) {
             dbUser = await prisma.user.create({
               data: {
-                name: user?.name ?? "Google User", // Fallback if name is missing
+                name: user?.name ?? "Google User",
                 email,
                 role: "CUSTOMER",
               },
@@ -309,10 +289,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }
       }
       return true;
-    },
-    async redirect({ baseUrl }) {
-      console.log("Redirecting to:", baseUrl);
-      return baseUrl;
     },
   },
 });

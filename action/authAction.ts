@@ -1,7 +1,15 @@
 "use server";
 import { auth, signIn, signOut } from "@/auth";
 import { persistor } from "@/GlobalState/store";
-import { isRedirectError } from "next/dist/client/components/redirect-error";
+// Polyfill for isRedirectError
+function isRedirectError(error: any): boolean {
+  return (
+    error &&
+    typeof error === "object" &&
+    (error.digest?.startsWith("NEXT_REDIRECT") ||
+      error.message?.includes("NEXT_REDIRECT"))
+  );
+}
 
 export async function loginWithCredentials(
   email: string | null,
