@@ -19,7 +19,6 @@ export const handleError = <T = { id: string }>(fn: AsyncHandler<T>) => {
         if (error.message === "User not found") {
           return NextResponse.json({ error: error.message }, { status: 404 });
         } else {
-          console.log("sdjfjds", error.message);
           return NextResponse.json({ error: "unknown error" }, { status: 404 });
         }
       }

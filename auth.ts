@@ -148,7 +148,6 @@
 //       return true;
 //     },
 //     async redirect({ baseUrl }) {
-//       console.log("Redirecting to:", baseUrl);
 //       return baseUrl;
 //     },
 //   },

@@ -31,7 +31,6 @@ export async function initializeShowSeats({
   premiumPrice: number;
   regularPrice: number;
 }) {
-  console.log("i434dsfsdd", id, vipPrice, premiumPrice, regularPrice);
   const existingSeatsCount = await prisma.showSeat.count({
     where: { showId: id },
   });
@@ -103,10 +102,9 @@ export async function getShowSeats(id: string) {
     });
 
     if (expiredBookings.length > 0) {
-      console.log(`[LazyRelease] Found ${expiredBookings.length} expired bookings. Releasing seats...`);
 
-      const expiredBookingIds = expiredBookings.map((b) => b.id);
-      const seatsToRelease = expiredBookings.flatMap((b) => b.seatIds);
+      const expiredBookingIds = expiredBookings.map((b: { id: any; }) => b.id);
+      const seatsToRelease = expiredBookings.flatMap((b: { seatIds: any; }) => b.seatIds);
 
       // Execute as transaction to ensure consistency
       await prisma.$transaction([

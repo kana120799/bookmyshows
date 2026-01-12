@@ -45,7 +45,6 @@ export default function HallLayout() {
   //       `/api/admin/hall/?cinemaId=${cinemaId}&hallId=${hallId}`
   //     );
   //     fetchData();
-  //     console.log("sdnfdsifhsdfsd", response.data.data);
   //     getHallDetails(response.data.data);
   //   } catch (error) {
   //     console.error("Error fetching halls:", error);

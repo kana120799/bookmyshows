@@ -23,7 +23,6 @@ export async function middleware(request: NextRequest) {
 
   // Admin access
   if (userRole === "ADMIN") {
-    console.log("Admin redirect check:", pathname);
     if (pathname.startsWith("/customer")) {
       console.log("Redirecting admin from customer to /admin");
       return NextResponse.redirect(new URL("/admin", request.url));

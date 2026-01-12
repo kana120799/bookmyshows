@@ -23,7 +23,6 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    console.log("Request body:", body);
 
     if (!body || typeof body !== "object") {
       throw new Error("Invalid request body: Payload must be a JSON object");
@@ -51,7 +50,6 @@ export async function POST(req: NextRequest) {
       const tempBooking = await tx.tempBooking.findUnique({
         where: { id: tempBookingId },
       });
-      console.log("AAAAAA", tempBooking);
 
       if (!tempBooking) {
         throw new Error("Temporary booking not found");
@@ -62,7 +60,6 @@ export async function POST(req: NextRequest) {
       }
 
       await tx.tempBooking.delete({ where: { id: tempBookingId } });
-      console.log("BBBB", tempBooking.seatIds, "===>>", tempBooking.showId);
 
       const seats = await tx.showSeat.findMany({
         where: {
@@ -71,19 +68,11 @@ export async function POST(req: NextRequest) {
           status: "LOCKED",
         },
       });
-      console.log("CCCC", seats);
 
       if (seats.length !== tempBooking.seatIds.length) {
         throw new Error("Some seats are no longer available");
       }
-      console.log(
-        "DDDDD",
-        "==>>",
-        tempBooking.showId,
-        "==>>",
-        tempBooking.seatIds.map((seatId) => ({ showSeatId: seatId })),
-        userDetails
-      );
+
 
       const booking = await tx.booking.create({
         data: {
@@ -133,7 +122,6 @@ export async function POST(req: NextRequest) {
     // Optional: Invalidate cache
     await revalidateTag(`seats:${result.booking.showId}`);
 
-    console.log("yes unlock happen");
     return NextResponse.json(
       {
         success: true,

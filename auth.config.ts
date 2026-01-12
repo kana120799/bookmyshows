@@ -28,7 +28,6 @@ export const authConfig = {
             return session;
         },
         async redirect({ baseUrl }) {
-            // console.log("Redirecting to:", baseUrl);
             return baseUrl;
         },
     },

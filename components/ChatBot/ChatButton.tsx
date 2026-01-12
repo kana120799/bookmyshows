@@ -1,11 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 import { MessageCircle } from "lucide-react";
 import ChatInterface from "./ChatInterface";
 
 export default function ChatButton() {
+    const { data: session } = useSession();
     const [isOpen, setIsOpen] = useState(false);
+
+    if (!session) return null;
 
     return (
         <>

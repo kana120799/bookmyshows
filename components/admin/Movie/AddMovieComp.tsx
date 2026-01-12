@@ -85,7 +85,6 @@
 //       if (poster) {
 //         movieData.append("poster", poster);
 //       }
-//       console.log("Fdsfjsfksdfs", movieData);
 //       await axios.post("/api/movie", movieData);
 //     } catch (err) {
 //       setError(err instanceof Error ? err.message : "Something went wrong");

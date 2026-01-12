@@ -14,7 +14,6 @@ export default function Home() {
 
   useEffect(() => {
     if (status === "loading") return;
-    console.log("session", session)
     // ADMIN redirect
     if (session?.user?.role === "ADMIN") {
       router.replace("/admin/cinema");
