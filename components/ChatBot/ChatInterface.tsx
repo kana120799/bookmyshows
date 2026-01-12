@@ -33,6 +33,7 @@ export default function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
     }, [messages]);
 
     const handleSend = async () => {
+        if (!session) return; // double check
         if (!input.trim() || isLoading) return;
 
         const userMessage = input.trim();
@@ -115,13 +116,13 @@ export default function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                        placeholder="Ask about movies..."
+                        placeholder={!session ? "Please sign in to chat..." : "Ask about movies..."}
                         className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-base"
-                        disabled={isLoading}
+                        disabled={isLoading || !session}
                     />
                     <button
                         onClick={handleSend}
-                        disabled={isLoading || !input.trim()}
+                        disabled={isLoading || !input.trim() || !session}
                         className="bg-indigo-600 text-white p-2 rounded-full hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
                     >
                         <Send size={20} />

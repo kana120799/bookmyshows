@@ -111,12 +111,10 @@ export async function DELETE(req: NextRequest) {
   const { bookingId, paymentId, tempBookingId } = await req.json();
 
   try {
-    console.log("AAAAA", bookingId, "==>>>", paymentId, "===>", tempBookingId);
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
       include: { payment: true, seats: { include: { showSeat: true } } },
     });
-    console.log("BBBBB", booking);
 
     if (!booking || booking.status === "CONFIRMED") {
       return NextResponse.json(
@@ -127,23 +125,19 @@ export async function DELETE(req: NextRequest) {
 
     const seatIds = booking.seats.map((seat) => seat.showSeatId);
     const showId = booking.showId;
-    console.log("CCC", seatIds, "==>>>", showId);
 
     await prisma.$transaction(async (tx) => {
       // Update seats back to AVAILABLE
-      console.log("ASDDDDDDD", seatIds);
 
       await tx.showSeat.updateMany({
         where: { id: { in: seatIds } },
         data: { isReserved: false, status: "AVAILABLE" },
       });
-      console.log("DDDDD", paymentId);
 
       // Delete payment record
       await tx.payment.delete({
         where: { id: paymentId },
       });
-      console.log("EEEE", bookingId);
 
       // Update booking status to CANCELED
       await tx.booking.update({
@@ -151,13 +145,11 @@ export async function DELETE(req: NextRequest) {
         data: { status: "CANCELED" },
       });
 
-      console.log("FFFF");
 
       // If tempBooking still exists
       const tempBooking = await tx.tempBooking.findUnique({
         where: { id: tempBookingId },
       });
-      console.log("GGGGG", tempBooking);
 
       if (tempBooking) {
         await tx.tempBooking.delete({ where: { id: tempBookingId } });

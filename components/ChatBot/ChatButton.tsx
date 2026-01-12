@@ -9,7 +9,7 @@ export default function ChatButton() {
     const { data: session } = useSession();
     const [isOpen, setIsOpen] = useState(false);
 
-    if (!session) return null;
+
 
     return (
         <>
