@@ -1,0 +1,207 @@
+/* 
+Error: PrismaClientInitializationError
+Mismatch between the Prisma Client's generated Query Engine and the runtime environment on Vercel.
+Prisma Client was generated for the debian-openssl-3.0.x runtime, but Vercel's deployment environment requires rhel-openssl-3.0.x.
+Updated the schema.prisma file to include the rhel-openssl-3.0.x binary target and regenerate the Prisma Client.
+The native target ensures compatibility with your local development environment.
+The rhel-openssl-3.0.x target ensures compatibility with Vercel's serverless runtime.
+*/
+
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+  binaryTargets = ["native", "debian-openssl-3.0.x", "rhel-openssl-3.0.x"]
+}
+
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CUSTOMER
+  ADMIN
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELED
+  EXPIRED
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELED
+}
+
+enum SeatType {
+  REGULAR
+  PREMIUM
+  VIP
+}
+
+enum PaymentMode {
+  CARD
+  UPI
+}
+
+
+model User {
+  id        String  @id @default(uuid())
+  name      String
+  email     String  @unique @db.VarChar(150) 
+  phone     String? @unique @db.VarChar(15)
+  password  String?  @db.VarChar(150)
+  role      Role    @default(CUSTOMER)
+  notificationsEnabled      Boolean @default(true) 
+  bookings  Booking[] 
+  notifications Notification[]
+  createdAt DateTime @default(now())
+  @@index([email])
+}
+
+model Address {
+  id       String @id @default(uuid())
+  street   String
+  city     String
+  state    String
+  zipCode  String
+  cinema   Cinema?
+}
+
+model Cinema {
+  id        String @id @default(uuid())
+  name      String
+  addressId String? @unique
+  address   Address? @relation(fields: [addressId], references: [id])
+  halls     CinemaHall[]
+}
+
+model CinemaHall {
+  id         String @id @default(uuid())
+  name       String
+  layout       Json
+  totalSeats   Int
+  cinemaId   String
+  cinema     Cinema @relation(fields: [cinemaId], references: [id])
+  shows      Show[]
+}
+
+model Movie {
+  id           String    @id @default(uuid())
+  title        String
+  description  String
+  Released     DateTime  
+  Year         Int       
+  Poster       String
+  Actors       String[]  
+  Director     String[]  
+  durationMins Int
+  language     String
+  releaseDate  DateTime
+  country      String
+  genre        String[]  
+  rating       Float?    @default(0.0)
+  shows        Show[]
+ 
+}
+
+model Show {
+  id           String @id @default(uuid())
+  movieId      String
+  cinemaHallId String
+  startTime    DateTime
+  movie        Movie   @relation(fields: [movieId], references: [id])
+  cinemaHall   CinemaHall @relation(fields: [cinemaHallId], references: [id])
+  seats        ShowSeat[]
+  bookings     Booking[]
+}
+
+model TempBooking {
+  id        String   @id @default(uuid())
+  userId    String
+  showId    String
+  seatIds   String[] // Array of seat IDs
+  total     Float
+  expiresAt DateTime
+}
+
+model ShowSeat {
+  id         String @id @default(uuid())
+  isReserved Boolean @default(false)
+  status     String @default("AVAILABLE") // "AVAILABLE", "LOCKED", "RESERVED"
+  price      Float
+  showId     String
+  show       Show @relation(fields: [showId], references: [id])
+  row        String // e.g., "A"
+  column     String // e.g., "C1"
+  type       SeatType // Optional, if not in layout
+  bookingSeats BookingSeat[]
+  @@index([showId, status])       // Faster lookups
+}
+
+
+model BookingSeat {
+  id         String   @id @default(uuid())
+  bookingId  String
+  booking    Booking  @relation(fields: [bookingId], references: [id])
+  showSeatId String   
+  showSeat   ShowSeat @relation(fields: [showSeatId], references: [id])
+}
+
+model Booking {
+  id          String  @id @default(uuid())
+  userId      String
+  user        User @relation(fields: [userId], references: [id])
+  showId      String
+  show        Show @relation(fields: [showId], references: [id])
+  seats       BookingSeat[]
+  status      BookingStatus @default(PENDING)
+  payment     Payment?
+  ticket      MailTicket?
+}
+
+
+model Payment {
+  id              String        @id @default(uuid())
+  amount          Float
+  mode            PaymentMode
+  createdOn       DateTime      @default(now())
+  status          PaymentStatus
+  transactionId   String?       @unique
+  bookingId       String        @unique
+  booking         Booking       @relation(fields: [bookingId], references: [id])
+  clientSecret    String?
+  paymentIntentId String?       @unique 
+
+}
+
+model Notification {
+  id          String @id @default(uuid())
+  createdOn   DateTime @default(now())
+  content     String
+  userId      String
+  user        User @relation(fields: [userId], references: [id])
+}
+
+model Coupon {
+  id         String @id @default(uuid())
+  code       String @unique
+  discount       Float
+  minPurchaseAmount Float? @default(0.0)
+  maxDiscount    Float? @default(0.0)
+  validTill      DateTime
+  applicableShows String[] // List of show IDs
+}
+
+model MailTicket {
+  id         String @id @default(uuid())
+  bookingId  String @unique
+  booking    Booking @relation(fields: [bookingId], references: [id])
+  email      String
+  sentAt     DateTime @default(now())
+}
