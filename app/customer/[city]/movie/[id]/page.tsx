@@ -93,11 +93,17 @@ export default function Page() {
           Actors={movieData.Actors}
           country={movieData.country}
           Year={movieData.Year}
-          selectedCity={selectedCity}
+          selectedCity={selectedCity || undefined}
           session={
-            session as
-              | { user: { name: string; email: string; role: string } }
-              | undefined
+            session
+              ? {
+                user: {
+                  name: session.user?.name || "",
+                  email: session.user?.email || "",
+                  role: session.user?.role || "",
+                },
+              }
+              : undefined
           }
         />
       </MovieDetailWrapper>
