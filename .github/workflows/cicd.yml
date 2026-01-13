@@ -74,7 +74,7 @@ jobs:
       - name: Test PostgreSQL Connection
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: pnpm dlx prisma db pull --force
+        run: pnpm exec prisma db pull --force
 
       - name: Install Redis CLI
         run: sudo apt-get update && sudo apt-get install -y redis-tools
