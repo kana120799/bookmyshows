@@ -27,27 +27,32 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
+          cache: "pnpm"
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install
 
       - name: Cache Vercel CLI
         uses: actions/cache@v4
         id: cache-vercel
         with:
           path: ~/.npm-global
-          key: ${{ runner.os }}-vercel-${{ hashFiles('package-lock.json') }}
+          key: ${{ runner.os }}-vercel-${{ hashFiles('pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-vercel-
 
       - name: Install Vercel CLI
         if: steps.cache-vercel.outputs.cache-hit != 'true'
-        run: npm install --global vercel@latest
+        run: pnpm add -g vercel@latest
         env:
           NPM_CONFIG_PREFIX: ~/.npm-global
 
@@ -69,7 +74,7 @@ jobs:
       - name: Test PostgreSQL Connection
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: npx prisma db pull --force
+        run: pnpm dlx prisma db pull --force
 
       - name: Install Redis CLI
         run: sudo apt-get update && sudo apt-get install -y redis-tools
@@ -112,27 +117,32 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
+          cache: "pnpm"
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install
 
       - name: Cache Vercel CLI
         uses: actions/cache@v4
         id: cache-vercel
         with:
           path: ~/.npm-global
-          key: ${{ runner.os }}-vercel-${{ hashFiles('package-lock.json') }}
+          key: ${{ runner.os }}-vercel-${{ hashFiles('pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-vercel-
 
       - name: Install Vercel CLI
         if: steps.cache-vercel.outputs.cache-hit != 'true'
-        run: npm install --global vercel@latest
+        run: pnpm add -g vercel@latest
         env:
           NPM_CONFIG_PREFIX: ~/.npm-global
 
@@ -153,7 +163,7 @@ jobs:
 
       - name: Generate Prisma Client
         if: steps.cache-prisma.outputs.cache-hit != 'true'
-        run: npx prisma generate
+        run: pnpm prisma generate
 
       - name: Build Project
         run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
@@ -169,27 +179,32 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
+          cache: "pnpm"
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install
 
       - name: Cache Vercel CLI
         uses: actions/cache@v4
         id: cache-vercel
         with:
           path: ~/.npm-global
-          key: ${{ runner.os }}-vercel-${{ hashFiles('package-lock.json') }}
+          key: ${{ runner.os }}-vercel-${{ hashFiles('pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-vercel-
 
       - name: Install Vercel CLI
         if: steps.cache-vercel.outputs.cache-hit != 'true'
-        run: npm install --global vercel@latest
+        run: pnpm add -g vercel@latest
         env:
           NPM_CONFIG_PREFIX: ~/.npm-global
 
@@ -210,12 +225,12 @@ jobs:
 
       - name: Generate Prisma Client
         if: steps.cache-prisma.outputs.cache-hit != 'true'
-        run: npx prisma generate
+        run: pnpm prisma generate
 
       - name: Run Prisma Migrations
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: npx prisma migrate deploy
+        run: pnpm prisma migrate deploy
 
       - name: Build Project
         run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
