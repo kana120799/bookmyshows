@@ -1,0 +1,45 @@
+{
+  "seats": {
+    "A": [
+      { "id": "A1", "type": "VIP" },
+      { "id": "A2", "type": "VIP" },
+      { "id": "A3", "type": "VIP" },
+      { "id": "A4", "type": "VIP" },
+      { "id": "A5", "type": "VIP" },
+      { "id": "A6", "type": "VIP" }
+    ],
+    "B": [
+      { "id": "B1", "type": "PREMIUM" },
+      { "id": "B2", "type": "PREMIUM" },
+      { "id": "B3", "type": "PREMIUM" },
+      { "id": "B4", "type": "PREMIUM" },
+      { "id": "B5", "type": "PREMIUM" },
+      { "id": "B6", "type": "PREMIUM" }
+    ],
+    "C": [
+      { "id": "C1", "type": "PREMIUM" },
+      { "id": "C2", "type": "PREMIUM" },
+      { "id": "C3", "type": "PREMIUM" },
+      { "id": "C4", "type": "PREMIUM" },
+      { "id": "C5", "type": "PREMIUM" },
+      { "id": "C6", "type": "PREMIUM" }
+    ],
+    "D": [
+      { "id": "D1", "type": "REGULAR" },
+      { "id": "D2", "type": "REGULAR" },
+      { "id": "D3", "type": "REGULAR" },
+      { "id": "D4", "type": "REGULAR" },
+      { "id": "D5", "type": "REGULAR" },
+      { "id": "D6", "type": "REGULAR" }
+    ],
+    "E": [
+      { "id": "E1", "type": "REGULAR" },
+      { "id": "E2", "type": "REGULAR" },
+      { "id": "E3", "type": "REGULAR" },
+      { "id": "E4", "type": "REGULAR" },
+      { "id": "E5", "type": "REGULAR" },
+      { "id": "E6", "type": "REGULAR" }
+    ]
+  },
+  "totalSeats": 30
+}
