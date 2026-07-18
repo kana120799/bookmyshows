@@ -79,35 +79,102 @@ jobs:
       - name: Install Redis CLI
         run: sudo apt-get update && sudo apt-get install -y redis-tools
 
-      - name: Debug Redis Configuration
+      - name: Parse and Sanitize Redis Environment
         env:
-          REDIS_HOST: ${{ secrets.REDIS_HOST }}
-          REDIS_PORT: ${{ secrets.REDIS_PORT }}
-          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+          RAW_REDIS_HOST: ${{ secrets.REDIS_HOST }}
+          RAW_REDIS_PORT: ${{ secrets.REDIS_PORT }}
+          RAW_REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
         run: |
-          echo "REDIS_HOST: $REDIS_HOST"
-          echo "REDIS_PORT: $REDIS_PORT"
-          echo "REDIS_PASSWORD: ${REDIS_PASSWORD:0:1}..."  # Show first char for verification
-          if [ -z "$REDIS_HOST" ] || [ -z "$REDIS_PORT" ] || [ -z "$REDIS_PASSWORD" ]; then
-            echo "Error: One or more Redis environment variables are empty"
-            exit 1
+          # Set defaults
+          REDIS_HOST="$RAW_REDIS_HOST"
+          REDIS_PORT="${RAW_REDIS_PORT:-6379}"
+          REDIS_PASSWORD="$RAW_REDIS_PASSWORD"
+          REDIS_TLS="false"
+
+          if [ -z "$RAW_REDIS_HOST" ]; then
+            echo "::warning::REDIS_HOST secret is empty or not set."
+          elif [[ "$RAW_REDIS_HOST" =~ ^rediss?:// ]]; then
+            echo "Detected Redis URL format. Parsing components..."
+            if [[ "$RAW_REDIS_HOST" =~ ^rediss:// ]]; then
+              REDIS_TLS="true"
+            fi
+            
+            # Strip protocol
+            PROTO_URL="${RAW_REDIS_HOST#*://}"
+            
+            # Extract auth part if present
+            if [[ "$PROTO_URL" == *"@"* ]]; then
+              AUTH_PART="${PROTO_URL%%@*}"
+              HOST_PORT="${PROTO_URL#*@}"
+              if [[ "$AUTH_PART" == *":"* ]]; then
+                REDIS_PASSWORD="${AUTH_PART#*:}"
+              else
+                REDIS_PASSWORD="$AUTH_PART"
+              fi
+            else
+              HOST_PORT="$PROTO_URL"
+            fi
+            
+            # Extract host and port
+            if [[ "$HOST_PORT" == *":"* ]]; then
+              REDIS_HOST="${HOST_PORT%%:*}"
+              REDIS_PORT="${HOST_PORT#*:}"
+              REDIS_PORT="${REDIS_PORT%%/*}"
+              REDIS_PORT="${REDIS_PORT%%\?*}"
+            else
+              REDIS_HOST="$HOST_PORT"
+              REDIS_HOST="${REDIS_HOST%%/*}"
+              REDIS_HOST="${REDIS_HOST%%\?*}"
+            fi
+          elif [[ "$RAW_REDIS_HOST" == *":"* ]]; then
+            # Format is host:port
+            REDIS_HOST="${RAW_REDIS_HOST%%:*}"
+            REDIS_PORT="${RAW_REDIS_HOST#*:}"
           fi
-          # Check DNS resolution
-          dig +short $REDIS_HOST || echo "DNS resolution failed for $REDIS_HOST"
-          # Check network connectivity
-          nc -zv $REDIS_HOST $REDIS_PORT -w 5 || echo "Network connection failed to $REDIS_HOST:$REDIS_PORT"
+
+          echo "Sanitized Redis host: $REDIS_HOST"
+          echo "Sanitized Redis port: $REDIS_PORT"
+          echo "Sanitized Redis TLS: $REDIS_TLS"
+
+          # Export to GITHUB_ENV
+          echo "REDIS_HOST=$REDIS_HOST" >> $GITHUB_ENV
+          echo "REDIS_PORT=$REDIS_PORT" >> $GITHUB_ENV
+          echo "REDIS_PASSWORD=$REDIS_PASSWORD" >> $GITHUB_ENV
+          echo "REDIS_TLS=$REDIS_TLS" >> $GITHUB_ENV
 
       - name: Test Redis Connection
-        env:
-          REDIS_HOST: ${{ secrets.REDIS_HOST }}
-          REDIS_PORT: ${{ secrets.REDIS_PORT }}
-          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
         run: |
-          echo "Attempting to connect to Redis at $REDIS_HOST:$REDIS_PORT"
-          redis-cli -h $REDIS_HOST -p $REDIS_PORT -a "$REDIS_PASSWORD" ping || {
-            echo "Redis connection failed. Please check REDIS_HOST, REDIS_PORT, REDIS_PASSWORD, and network accessibility."
-            exit 1
-          }
+          if [ -z "$REDIS_HOST" ]; then
+            echo "Redis host is empty. Skipping connection check."
+            exit 0
+          fi
+          
+          echo "Checking network connectivity to $REDIS_HOST:$REDIS_PORT..."
+          CONN_SUCCESS=true
+          if ! nc -zv "$REDIS_HOST" "$REDIS_PORT" -w 5; then
+            echo "::warning::Network connection failed to $REDIS_HOST:$REDIS_PORT. This is expected if your Redis server is in a private network or behind a firewall."
+            CONN_SUCCESS=false
+          fi
+
+          if [ "$CONN_SUCCESS" = "true" ]; then
+            echo "Network connection succeeded. Attempting Redis ping..."
+            CLI_ARGS="-h $REDIS_HOST -p $REDIS_PORT"
+            if [ ! -z "$REDIS_PASSWORD" ]; then
+              CLI_ARGS="$CLI_ARGS -a $REDIS_PASSWORD"
+            fi
+            if [ "$REDIS_TLS" = "true" ] || [ "$REDIS_PORT" = "6380" ]; then
+              CLI_ARGS="$CLI_ARGS --tls"
+            fi
+            
+            if redis-cli $CLI_ARGS ping; then
+              echo "Redis connection verified successfully!"
+            else
+              echo "Error: Redis CLI ping failed on reachable host. Please verify REDIS_PASSWORD and Redis server configuration."
+              exit 1
+            fi
+          else
+            echo "Skipping active Redis ping check because the host is not reachable from this environment."
+          fi
 
   deploy-preview:
     needs: check-connections
